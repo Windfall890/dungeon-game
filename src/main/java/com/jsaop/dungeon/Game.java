@@ -2,7 +2,7 @@ package com.jsaop.dungeon;
 
 public class Game {
     private PlayerCharacter player;
-    private Treasure treasure;
+    private Goal goal;
     private Dungeon dungeon;
     private char[][] map;
     private int turn;
@@ -16,11 +16,11 @@ public class Game {
         dungeon = new Dungeon(width, height);
         map = dungeon.getMapCopy();
         player = new PlayerCharacter();
-        treasure = new Treasure();
+        goal = new Goal();
         turn = 0;
         hasWon = false;
         placePlayer();
-        placeTreasure();
+        placeGoalFarFromPlayer();
     }
 
     public void movePlayerOnce(String direction) {
@@ -42,7 +42,6 @@ public class Game {
                 if (getMap()[getPlayer().getX() + 1][getPlayer().getY()] != '#')
                     player.setX(getPlayer().getX() + 1);
                 break;
-
         }
 
         turn++;
@@ -51,7 +50,7 @@ public class Game {
             hasWon = true;
     }
 
-    private void placeTreasure() {
+    private void placeGoalFarFromPlayer() {
 
         double maxDistance = 0;
         int maxX = 0, maxY = 0;
@@ -66,14 +65,12 @@ public class Game {
                         maxY = j;
                     }
                 }
-
             }
         }
 
-
-        treasure.setX(maxX);
-        treasure.setY(maxY);
-        map[treasure.getX()][treasure.getY()] = '*';
+        goal.setX(maxX);
+        goal.setY(maxY);
+        map[goal.getX()][goal.getY()] = '*';
 
     }
 
@@ -82,7 +79,7 @@ public class Game {
     }
 
     private boolean playerIsOnTreasure() {
-        return (player.getX() == treasure.getX() && player.getY() == treasure.getY());
+        return (player.getX() == goal.getX() && player.getY() == goal.getY());
     }
 
     private void placePlayer() {
@@ -96,7 +93,7 @@ public class Game {
     }
 
     private void placePlayerOnMap(PlayerCharacter player) {
-        map[player.getX()][player.getY()] = player.getBody();
+        map[player.getX()][player.getY()] = player.getGlyph();
     }
 
     public PlayerCharacter getPlayer() {

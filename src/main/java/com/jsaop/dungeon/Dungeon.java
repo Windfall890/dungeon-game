@@ -74,8 +74,8 @@ public class Dungeon {
 
     private void placeRooms() {
 
-        int quarterH = (int) height / 3;
-        int quarterW = (int) width / 3;
+        int quarterH = height / 3;
+        int quarterW = width / 3;
 
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 3; i++) {
@@ -85,19 +85,13 @@ public class Dungeon {
                 int y = quarterH * (i + 1) - room.getHeight();
 
                 room.translate(x, y);
-
             }
         }
-        stampRoom(rooms.get(0));
-        stampRoom(rooms.get(1));
-        stampRoom(rooms.get(2));
-        stampRoom(rooms.get(3));
-        stampRoom(rooms.get(4));
-        stampRoom(rooms.get(5));
-        stampRoom(rooms.get(6));
-        stampRoom(rooms.get(7));
-        stampRoom(rooms.get(8));
 
+        for (Room r : rooms) {
+            stampRoom(r);
+
+        }
     }
 
     private void stampRoom(Room room) {

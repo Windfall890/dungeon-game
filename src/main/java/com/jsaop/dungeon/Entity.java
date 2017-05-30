@@ -1,20 +1,12 @@
 package com.jsaop.dungeon;
 
-public class Treasure {
-
-    private int x;
-    private int y;
-    private char glyph;
-
-    public Treasure() {
-        this(0,0, '*');
-    }
-
-    public Treasure(int x, int y, char glyph) {
-        this.x = x;
-        this.y = y;
-        this.glyph = glyph;
-    }
+/**
+ * Created by jsaop on 5/30/17.
+ */
+public class Entity {
+    protected int x;
+    protected int y;
+    protected char glyph;
 
     public int getX() {
         return x;
@@ -39,6 +31,9 @@ public class Treasure {
     public void setGlyph(char glyph) {
         this.glyph = glyph;
     }
+
+    public void translate(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
 }
-
-
