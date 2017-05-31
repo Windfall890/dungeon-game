@@ -66,8 +66,8 @@ public class Dungeon {
     private void generateRooms(int num) {
 
         for (int i = 0; i < num; i++) {
-            int maxH = (int) height / 3;
-            int maxW = (int) width / 3;
+            int maxH = height / 3;
+            int maxW = width / 3;
             rooms.add(Room.randomRoom(maxW, maxH));
         }
     }

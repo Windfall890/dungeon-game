@@ -1,8 +1,13 @@
 package com.jsaop.dungeon;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Game {
     private PlayerCharacter player;
     private Goal goal;
+    private Enemy enemy;
+    private List<Entity> entities;
     private Dungeon dungeon;
     private char[][] map;
     private int turn;
@@ -17,44 +22,70 @@ public class Game {
         map = dungeon.getMapCopy();
         player = new PlayerCharacter();
         goal = new Goal();
+        enemy = new Enemy();
+
+        entities = new ArrayList<>();
+
+        entities.add(player);
+        entities.add(goal);
+        entities.add(enemy);
+
         turn = 0;
         hasWon = false;
         placePlayer();
         placeGoalFarFromPlayer();
+        placeEnemy();
     }
 
-    public void movePlayerOnce(String direction) {
-        map[player.getX()][player.getY()] = dungeon.getTile(player.getX(), player.getY());
-        switch (direction) {
-            case "DOWN":
-                if (getMap()[getPlayer().getX()][getPlayer().getY() + 1] != '#')
-                    player.setY(getPlayer().getY() + 1);
-                break;
-            case "UP":
-                if (getMap()[getPlayer().getX()][getPlayer().getY() - 1] != '#')
-                    player.setY(getPlayer().getY() - 1);
-                break;
-            case "LEFT":
-                if (getMap()[getPlayer().getX() - 1][getPlayer().getY()] != '#')
-                    player.setX(getPlayer().getX() - 1);
-                break;
-            case "RIGHT":
-                if (getMap()[getPlayer().getX() + 1][getPlayer().getY()] != '#')
-                    player.setX(getPlayer().getX() + 1);
-                break;
-        }
-
+    public void takeTurn(Directions direction) {
         turn++;
-        placePlayerOnMap(player);
+
+        moveEntity(direction, player);
+
         if (playerIsOnTreasure())
             hasWon = true;
+
+        takeEnemyTurn();
+
+
+
+    }
+
+    private void takeEnemyTurn() {
+
+
+
+    }
+
+
+    private void moveEntity(Directions direction, Entity entity) {
+        map[entity.getX()][entity.getY()] = dungeon.getTile(entity.getX(), entity.getY());
+        switch (direction) {
+            case DOWN:
+                if (getMap()[entity.getX()][entity.getY() + 1] != '#')
+                    entity.setY(entity.getY() + 1);
+                break;
+            case UP:
+                if (getMap()[entity.getX()][entity.getY() - 1] != '#')
+                    entity.setY(entity.getY() - 1);
+                break;
+            case LEFT:
+                if (getMap()[entity.getX() - 1][entity.getY()] != '#')
+                    entity.setX(entity.getX() - 1);
+                break;
+            case RIGHT:
+                if (getMap()[entity.getX() + 1][entity.getY()] != '#')
+                    entity.setX(entity.getX() + 1);
+                break;
+        }
+        placeEntityOnMap(player);
     }
 
     private void placeGoalFarFromPlayer() {
 
         double maxDistance = 0;
         int maxX = 0, maxY = 0;
-        double tempDistance = 0;
+        double tempDistance;
         for (int i = 0; i < dungeon.getWidth(); i++) {
             for (int j = 0; j < dungeon.getHeight(); j++) {
                 if (map[i][j] != '#') {
@@ -70,7 +101,32 @@ public class Game {
 
         goal.setX(maxX);
         goal.setY(maxY);
-        map[goal.getX()][goal.getY()] = '*';
+        map[goal.getX()][goal.getY()] = goal.getGlyph();
+
+    }
+
+    private void placeEnemy() {
+        double maxDistance = 0;
+        int maxX = 0, maxY = 0;
+        double distanceEnemyToGoal;
+        double distanceEnemyToPlayer;
+        for (int i = 0; i < dungeon.getWidth(); i++) {
+            for (int j = 0; j < dungeon.getHeight(); j++) {
+                if (map[i][j] != '#') {
+                    distanceEnemyToGoal = calcSquareDistance(player.getX(), player.getY(), i, j);
+                    distanceEnemyToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
+                    if (maxDistance < distanceEnemyToGoal && maxDistance < distanceEnemyToPlayer) {
+                        maxDistance = (distanceEnemyToGoal < distanceEnemyToPlayer)? distanceEnemyToGoal: distanceEnemyToPlayer;
+                        maxX = i;
+                        maxY = j;
+                    }
+                }
+            }
+        }
+
+        enemy.setX(maxX);
+        enemy.setY(maxY);
+        map[enemy.getX()][enemy.getY()] = enemy.getGlyph();
 
     }
 
@@ -87,13 +143,13 @@ public class Game {
             for (int j = 0; j < dungeon.getHeight(); j++)
                 if (map[i][j] != '#') {
                     player.translate(i, j);
-                    placePlayerOnMap(player);
+                    placeEntityOnMap(player);
                     return;
                 }
     }
 
-    private void placePlayerOnMap(PlayerCharacter player) {
-        map[player.getX()][player.getY()] = player.getGlyph();
+    private void placeEntityOnMap(Entity entity) {
+        map[entity.getX()][entity.getY()] = entity.getGlyph();
     }
 
     public PlayerCharacter getPlayer() {
