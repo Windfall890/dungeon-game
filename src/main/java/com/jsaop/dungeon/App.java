@@ -15,6 +15,7 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import static com.jsaop.dungeon.BlockValues.*;
 import static com.jsaop.dungeon.Directions.*;
 
 
@@ -115,10 +116,22 @@ public class App extends Application {
         updateGrid();
         turn.setText("Turn: " + game.getTurn());
         if (game.hasWon())
-            gameEnd();
+            gameWin();
+        if(game.getPlayer().isDead())
+            gameLose();
+
     }
 
-    private void gameEnd() {
+    private void gameLose() {
+        Alert alert = new Alert(AlertType.WARNING);
+        alert.setTitle("YOU LOSE!");
+        alert.setHeaderText("You were zapped by a Guy!");
+        alert.setContentText("I have a sad message for you: You are dead.");
+        timeline.pause();
+        alert.show();
+    }
+
+    private void gameWin() {
         Alert alert = new Alert(AlertType.CONFIRMATION);
         alert.setTitle("Winner!");
         alert.setHeaderText("WOW YOU WIN!");
@@ -138,12 +151,14 @@ public class App extends Application {
         Rectangle r = getRectangle(x, y);
         if (game.getMap()[x][y] == '#') {
             setColor(r, Color.DARKSLATEGRAY);
-        } else if (game.getMap()[x][y] == '.') {
+        } else if (game.getMap()[x][y] == FLOOR.getValue()) {
             setColor(r, Color.BEIGE);
-        } else if (game.getMap()[x][y] == '@') {
+        } else if (game.getMap()[x][y] == PLAYER.getValue()) {
             setColor(r, Color.BLUEVIOLET);
-        } else if (game.getMap()[x][y] == '*') {
+        } else if (game.getMap()[x][y] == GOAL.getValue()) {
             setColor(r, Color.BLUE);
+        } else if (game.getMap()[x][y] == ENEMY.getValue()) {
+            setColor(r, Color.RED);
         }
     }
 

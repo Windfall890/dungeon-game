@@ -2,9 +2,12 @@ package com.jsaop.dungeon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
+
+import static com.jsaop.dungeon.Directions.*;
 
 public class Game {
-    private PlayerCharacter player;
+    private Player player;
     private Goal goal;
     private Enemy enemy;
     private List<Entity> entities;
@@ -13,6 +16,8 @@ public class Game {
     private int turn;
     private boolean hasWon;
 
+    private Random random;
+
     public Game() {
         this(100, 100);
     }
@@ -20,7 +25,8 @@ public class Game {
     public Game(int width, int height) {
         dungeon = new Dungeon(width, height);
         map = dungeon.getMapCopy();
-        player = new PlayerCharacter();
+        random = new Random();
+        player = new Player();
         goal = new Goal();
         enemy = new Enemy();
 
@@ -40,45 +46,50 @@ public class Game {
     public void takeTurn(Directions direction) {
         turn++;
 
-        moveEntity(direction, player);
+        moveEntityOnMap(direction, player);
 
         if (playerIsOnTreasure())
             hasWon = true;
 
         takeEnemyTurn();
-
-
-
     }
 
     private void takeEnemyTurn() {
 
+        double prob = random.nextDouble();
+        if(prob > 0.3)
+            chasePlayer(enemy);
+        else {
+            moveRandomly(enemy);
+            moveRandomly(enemy);
+        }
 
+        if(enemy.isTouching(player))
+            player.kill();
 
     }
 
+    private void chasePlayer(Entity enemy) {
 
-    private void moveEntity(Directions direction, Entity entity) {
+        Directions dx = (player.getX() > enemy.getX())? RIGHT : LEFT;
+        Directions dy = (player.getY() > enemy.getY())? DOWN: UP;
+
+        moveEntityOnMap(dx, enemy);
+        moveEntityOnMap(dy, enemy);
+
+    }
+
+    private void moveRandomly(Entity entity) {
+        Directions[] values = values();
+        int pick = random.nextInt(values.length);
+        moveEntityOnMap(values[pick], entity);
+    }
+
+
+    private void moveEntityOnMap(Directions direction, Entity entity) {
         map[entity.getX()][entity.getY()] = dungeon.getTile(entity.getX(), entity.getY());
-        switch (direction) {
-            case DOWN:
-                if (getMap()[entity.getX()][entity.getY() + 1] != '#')
-                    entity.setY(entity.getY() + 1);
-                break;
-            case UP:
-                if (getMap()[entity.getX()][entity.getY() - 1] != '#')
-                    entity.setY(entity.getY() - 1);
-                break;
-            case LEFT:
-                if (getMap()[entity.getX() - 1][entity.getY()] != '#')
-                    entity.setX(entity.getX() - 1);
-                break;
-            case RIGHT:
-                if (getMap()[entity.getX() + 1][entity.getY()] != '#')
-                    entity.setX(entity.getX() + 1);
-                break;
-        }
-        placeEntityOnMap(player);
+        entity.move(direction, map);
+        placeEntityOnMap(entity);
     }
 
     private void placeGoalFarFromPlayer() {
@@ -152,7 +163,7 @@ public class Game {
         map[entity.getX()][entity.getY()] = entity.getGlyph();
     }
 
-    public PlayerCharacter getPlayer() {
+    public Player getPlayer() {
         return player;
     }
 

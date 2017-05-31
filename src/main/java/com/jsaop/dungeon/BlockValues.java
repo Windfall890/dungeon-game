@@ -1,27 +1,20 @@
 package com.jsaop.dungeon;
 
 public enum BlockValues {
-    FLOOR(16,'.'),
-    WALL(192,'#'),
-    EMPTY(255,' ');
+    FLOOR('.'),
+    WALL('#'),
+    EMPTY(' '),
+    PLAYER('@'),
+    GOAL('*'),
+    ENEMY('O');
 
-    private final int value;
-    private final char glyph;
+    private final char value;
 
-    BlockValues(int value, char glyph) {
+    BlockValues(char value) {
         this.value = value;
-        this.glyph = glyph;
     }
 
-    public int getValue() {
+    public char getValue() {
         return value;
-    }
-
-    public char getGlyph() {
-        return glyph;
-    }
-
-    public char valueToGlyph(int v){
-        return glyph;
     }
 }
