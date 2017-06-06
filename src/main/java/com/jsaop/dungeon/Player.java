@@ -1,26 +1,30 @@
 package com.jsaop.dungeon;
 
+import static com.jsaop.dungeon.Action.WAIT;
+
 public class Player extends Entity {
 
-    private boolean isDead = false;
+
+    private static final int STARTING_PLAYER_HP = 10;
 
     public Player() {
-        this.x=0;
-        this.y=0;
-        this.glyph ='@';
+        this(0, 0, BlockValues.PLAYER.getValue(), STARTING_PLAYER_HP);
     }
 
-    public Player(int x, int y, char glyph) {
+    public Player(int x, int y, char glyph, int hp) {
         this.x = x;
         this.y = y;
         this.glyph = glyph;
+        this.hp = hp;
     }
 
-    public boolean isDead() {
-        return isDead;
+    public void execute(Action action) {
+        if (action.isMoveAction())
+            move(action);
+
+        if (action == WAIT)
+            System.out.println("player is waiting");
     }
 
-    public void kill() {
-        isDead = true;
-    }
 }
+

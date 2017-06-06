@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-import static com.jsaop.dungeon.Directions.*;
 
 public class Game {
     private Player player;
@@ -12,7 +11,8 @@ public class Game {
     private Enemy enemy;
     private List<Entity> entities;
     private Dungeon dungeon;
-    private char[][] map;
+    private char[][] masterMap;
+    private boolean[][] explored;
     private int turn;
     private boolean hasWon;
 
@@ -24,11 +24,14 @@ public class Game {
 
     public Game(int width, int height) {
         dungeon = new Dungeon(width, height);
-        map = dungeon.getMapCopy();
+        masterMap = dungeon.getMap();
+        explored = new boolean[width][height];
+
         random = new Random();
-        player = new Player();
+
+        player = initPlayer();
         goal = new Goal();
-        enemy = new Enemy();
+        enemy = initEnemy();
 
         entities = new ArrayList<>();
 
@@ -38,68 +41,63 @@ public class Game {
 
         turn = 0;
         hasWon = false;
-        placePlayer();
-        placeGoalFarFromPlayer();
-        placeEnemy();
+        pickPlayerStartLocation();
+        pickGoalLocationFarFromPlayer();
+        pickEnemyStartLocation();
+
+        updateExplored(); // starting view
     }
 
-    public void takeTurn(Directions direction) {
+    private Player initPlayer() {
+        Player player = new Player();
+        player.setMap(masterMap);
+        return player;
+    }
+
+    private Enemy initEnemy() {
+        Enemy enemy = new Enemy();
+        enemy.setMap(masterMap);
+        enemy.addTarget(player);
+        return enemy;
+    }
+
+    public void takeTurn(Action action) {
         turn++;
 
-        moveEntityOnMap(direction, player);
+        player.execute(action);
+
+        updateExplored();
 
         if (playerIsOnTreasure())
             hasWon = true;
 
-        takeEnemyTurn();
+        enemy.takeTurn();
+
     }
 
-    private void takeEnemyTurn() {
-
-        double prob = random.nextDouble();
-        if(prob > 0.3)
-            chasePlayer(enemy);
-        else {
-            moveRandomly(enemy);
-            moveRandomly(enemy);
+    private void updateExplored() {
+        for (int x = 0; x < dungeon.getWidth(); x++) {
+            for (int y = 0; y < dungeon.getHeight(); y++) {
+                if(player.canSee(x,y, 11)){
+                    explored[x][y] = true;
+                }
+            }
         }
 
-        if(enemy.isTouching(player))
-            player.kill();
-
     }
 
-    private void chasePlayer(Entity enemy) {
-
-        Directions dx = (player.getX() > enemy.getX())? RIGHT : LEFT;
-        Directions dy = (player.getY() > enemy.getY())? DOWN: UP;
-
-        moveEntityOnMap(dx, enemy);
-        moveEntityOnMap(dy, enemy);
-
+    private boolean playerCanSee(int x, int y) {
+        return (calcSquareDistance(x, y, player.getX(), player.getY()) < 11);
     }
 
-    private void moveRandomly(Entity entity) {
-        Directions[] values = values();
-        int pick = random.nextInt(values.length);
-        moveEntityOnMap(values[pick], entity);
-    }
-
-
-    private void moveEntityOnMap(Directions direction, Entity entity) {
-        map[entity.getX()][entity.getY()] = dungeon.getTile(entity.getX(), entity.getY());
-        entity.move(direction, map);
-        placeEntityOnMap(entity);
-    }
-
-    private void placeGoalFarFromPlayer() {
+    private void pickGoalLocationFarFromPlayer() {
 
         double maxDistance = 0;
         int maxX = 0, maxY = 0;
         double tempDistance;
         for (int i = 0; i < dungeon.getWidth(); i++) {
             for (int j = 0; j < dungeon.getHeight(); j++) {
-                if (map[i][j] != '#') {
+                if (masterMap[i][j] != '#') {
                     tempDistance = calcSquareDistance(player.getX(), player.getY(), i, j);
                     if (maxDistance < tempDistance) {
                         maxDistance = tempDistance;
@@ -112,18 +110,16 @@ public class Game {
 
         goal.setX(maxX);
         goal.setY(maxY);
-        map[goal.getX()][goal.getY()] = goal.getGlyph();
-
     }
 
-    private void placeEnemy() {
+    private void pickEnemyStartLocation() {
         double maxDistance = 0;
         int maxX = 0, maxY = 0;
         double distanceEnemyToGoal;
         double distanceEnemyToPlayer;
         for (int i = 0; i < dungeon.getWidth(); i++) {
             for (int j = 0; j < dungeon.getHeight(); j++) {
-                if (map[i][j] != '#') {
+                if (masterMap[i][j] != '#') {
                     distanceEnemyToGoal = calcSquareDistance(player.getX(), player.getY(), i, j);
                     distanceEnemyToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
                     if (maxDistance < distanceEnemyToGoal && maxDistance < distanceEnemyToPlayer) {
@@ -137,11 +133,9 @@ public class Game {
 
         enemy.setX(maxX);
         enemy.setY(maxY);
-        map[enemy.getX()][enemy.getY()] = enemy.getGlyph();
-
     }
 
-    private double calcSquareDistance(int x1, int y1, int x2, int y2) {
+    private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
         return (double) ((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
     }
 
@@ -149,17 +143,16 @@ public class Game {
         return (player.getX() == goal.getX() && player.getY() == goal.getY());
     }
 
-    private void placePlayer() {
+    private void pickPlayerStartLocation() {
         for (int i = 0; i < dungeon.getWidth(); i++)
             for (int j = 0; j < dungeon.getHeight(); j++)
-                if (map[i][j] != '#') {
+                if (masterMap[i][j] != '#') {
                     player.translate(i, j);
-                    placeEntityOnMap(player);
                     return;
                 }
     }
 
-    private void placeEntityOnMap(Entity entity) {
+    private static void placeEntityOnMap(Entity entity, char[][] map) {
         map[entity.getX()][entity.getY()] = entity.getGlyph();
     }
 
@@ -172,7 +165,14 @@ public class Game {
     }
 
     public char[][] getMap() {
-        return map;
+
+        char[][] copy = dungeon.getMapCopy();
+
+        for (Entity e : entities) {
+            placeEntityOnMap(e,copy);
+        }
+
+        return copy;
     }
 
     public int getTurn() {
@@ -181,5 +181,9 @@ public class Game {
 
     public boolean hasWon() {
         return hasWon;
+    }
+
+    public boolean isExplored(int x, int y) {
+        return explored[x][y];
     }
 }

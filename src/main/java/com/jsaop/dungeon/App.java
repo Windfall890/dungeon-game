@@ -15,14 +15,15 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
+import static com.jsaop.dungeon.Action.*;
 import static com.jsaop.dungeon.BlockValues.*;
-import static com.jsaop.dungeon.Directions.*;
 
 
 public class App extends Application {
     public static final int WIDTH = 50;
     public static final int HEIGHT = 50;
     public static final int CELL_DIMENSION = 10;
+    public static final boolean FOW_ENABLED = false;
 
     public static final long DEFAULT_FRAME_DELAY = 100;
 
@@ -72,9 +73,9 @@ public class App extends Application {
         scene.setOnKeyPressed((KeyEvent event) -> {
             if (event.getCode() == KeyCode.SPACE)
                 handleKeyCodeSpace();
-            else if (event.getCode() == KeyCode.DOWN)
+            else if (event.getCode() == KeyCode.DOWN) {
                 game.takeTurn(DOWN);
-            else if (event.getCode() == KeyCode.UP)
+            } else if (event.getCode() == KeyCode.UP)
                 game.takeTurn(UP);
             else if (event.getCode() == KeyCode.LEFT)
                 game.takeTurn(LEFT);
@@ -117,7 +118,7 @@ public class App extends Application {
         turn.setText("Turn: " + game.getTurn());
         if (game.hasWon())
             gameWin();
-        if(game.getPlayer().isDead())
+        if (game.getPlayer().isDead())
             gameLose();
 
     }
@@ -149,16 +150,20 @@ public class App extends Application {
 
     private void updateCell(int x, int y) {
         Rectangle r = getRectangle(x, y);
-        if (game.getMap()[x][y] == '#') {
-            setColor(r, Color.DARKSLATEGRAY);
-        } else if (game.getMap()[x][y] == FLOOR.getValue()) {
-            setColor(r, Color.BEIGE);
-        } else if (game.getMap()[x][y] == PLAYER.getValue()) {
-            setColor(r, Color.BLUEVIOLET);
-        } else if (game.getMap()[x][y] == GOAL.getValue()) {
-            setColor(r, Color.BLUE);
-        } else if (game.getMap()[x][y] == ENEMY.getValue()) {
-            setColor(r, Color.RED);
+        if (FOW_ENABLED && !game.isExplored(x, y)) {
+            setColor(r, Color.BLACK);
+        } else {
+            if (game.getMap()[x][y] == '#') {
+                setColor(r, Color.DARKSLATEGRAY);
+            } else if (game.getMap()[x][y] == FLOOR.getValue()) {
+                setColor(r, Color.BEIGE);
+            } else if (game.getMap()[x][y] == PLAYER.getValue()) {
+                setColor(r, Color.BLUEVIOLET);
+            } else if (game.getMap()[x][y] == GOAL.getValue()) {
+                setColor(r, Color.BLUE);
+            } else if (game.getMap()[x][y] == ENEMY.getValue()) {
+                setColor(r, Color.RED);
+            }
         }
     }
 

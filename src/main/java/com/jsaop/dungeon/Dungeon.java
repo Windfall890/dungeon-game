@@ -143,7 +143,6 @@ public class Dungeon {
         }
     }
 
-
     public char[][] getMapCopy() {
 
         char[][] copy = new char[width][height];
@@ -159,5 +158,9 @@ public class Dungeon {
 
     public char getTile(int x, int y) {
         return map[x][y];
+    }
+
+    public char[][] getMap() {
+        return map;
     }
 }
