@@ -21,10 +21,10 @@ import static com.jsaop.dungeon.BlockValues.*;
 
 
 public class App extends Application {
-    public static final int WIDTH = 50;
-    public static final int HEIGHT = 50;
-    public static final int CELL_DIMENSION = 10;
-    public static final boolean FOW_ENABLED = true;
+    public static final int WIDTH = 60;
+    public static final int HEIGHT = 31;
+    public static final int CELL_DIMENSION = 12;
+    public static final boolean FOW_ENABLED = false;
 
     public static final long DEFAULT_FRAME_DELAY = 100;
 
@@ -45,9 +45,14 @@ public class App extends Application {
         launch(args);
     }
 
-    private static void setColor(Rectangle r, Color color) {
-        r.setFill(color);
-        r.setStroke(color);
+    private static void setTile(StackPane pane, Color bg, Color fg, char c) {
+        Rectangle r = (Rectangle) pane.getChildren().get(0);
+        r.setFill(bg);
+        r.setStroke(bg);
+
+        Label l = (Label) pane.getChildren().get(1);
+        l.setText(c + "");
+        l.setStyle("-fx-text-fill: black");
     }
 
     @Override
@@ -106,9 +111,8 @@ public class App extends Application {
 
     private void createGridCell(int x, int y) {
         Rectangle r = new Rectangle();
-        r.setWidth(CELL_DIMENSION);
-        r.setHeight(CELL_DIMENSION);
-        Label glyph = new Label(".");
+        Label glyph = new Label("#");
+        glyph.setPrefSize(CELL_DIMENSION,CELL_DIMENSION);
         r.widthProperty().bind(glyph.widthProperty());
         r.heightProperty().bind(glyph.heightProperty());
 
@@ -166,37 +170,39 @@ public class App extends Application {
     }
 
     private void updateCell(int x, int y) {
-        Rectangle r = getRectangle(x, y);
-        Color color = UNEXPLORED_COLOR;
+        StackPane pane = getPane(x, y);
+        Color bgColor = UNEXPLORED_COLOR;
+        Color fgColor = UNEXPLORED_COLOR;
+        char glyph = game.getMap()[x][y];
         if (FOW_ENABLED && !game.isExplored(x, y)) {
-            color = UNEXPLORED_COLOR;
+            bgColor = UNEXPLORED_COLOR;
         } else {
-            char tile = game.getMap()[x][y];
-            if (tile == WALL.getValue()) {
-                color = WALL_COLOR;
-            } else if (tile == FLOOR.getValue()) {
-                color = FLOOR_COLOR;
-            } else if (tile == PLAYER.getValue()) {
-                color = PLAYER_COLOR;
-            } else if (tile == GOAL.getValue()) {
-                color = GOAL_COLOR;
-            } else if (tile == ENEMY.getValue()) {
-                color = ENEMY_COLOR;
+            if (glyph == WALL.getValue()) {
+                bgColor = WALL_COLOR;
+            } else if (glyph == FLOOR.getValue()) {
+                bgColor = FLOOR_COLOR;
+            } else if (glyph == PLAYER.getValue()) {
+                bgColor = PLAYER_COLOR;
+            } else if (glyph == GOAL.getValue()) {
+                bgColor = GOAL_COLOR;
+            } else if (glyph == ENEMY.getValue()) {
+                bgColor = ENEMY_COLOR;
             }
         }
 
         Player player = game.getPlayer();
         if(!player.playerCanSee(x,y)){
-            if(color == ENEMY_COLOR){
-                color = FLOOR_COLOR; //hack to make enemies disappear
+            if(bgColor == ENEMY_COLOR){
+                bgColor = FLOOR_COLOR; //hack to make enemies disappear
+                glyph = FLOOR.getValue();
             }
-            color = color.darker().darker();
+            bgColor = bgColor.darker().darker();
         }
-        setColor(r,color);
+        setTile(pane,bgColor, fgColor, glyph);
     }
 
-    private Rectangle getRectangle(int x, int y) {
-        return (Rectangle) ((StackPane) grid.getChildren().get(getIndex(x, y))).getChildren().get(0);
+    private StackPane getPane(int x, int y) {
+        return (StackPane) grid.getChildren().get(getIndex(x, y));
     }
 
     private int getIndex(int x, int y) {
