@@ -1,4 +1,4 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.dungeon;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,15 +70,15 @@ public class Dungeon {
 
     private void placeRooms() {
 
-        int quarterH = (height-1) / 3;
-        int quarterW = (width-1) / 3;
+        int quarterH = (height - 1) / 3;
+        int quarterW = (width - 1) / 3;
 
         for (int j = 0; j < 3; j++) {
             for (int i = 0; i < 3; i++) {
                 Room room = rooms.get(i * 3 + j);
 
-                int x = quarterW * (j +1) - room.getWidth();
-                int y = quarterH * (i +1) - room.getHeight();
+                int x = quarterW * (j + 1) - room.getWidth();
+                int y = quarterH * (i + 1) - room.getHeight();
 
                 room.translate(x, y);
             }

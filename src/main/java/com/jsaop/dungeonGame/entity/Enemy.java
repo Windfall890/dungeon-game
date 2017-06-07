@@ -1,10 +1,12 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.entity;
+
+import com.jsaop.dungeonGame.dungeon.Action;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static com.jsaop.dungeon.Action.*;
-import static com.jsaop.dungeon.BlockValues.ENEMY;
+import static com.jsaop.dungeonGame.dungeon.Action.*;
+import static com.jsaop.dungeonGame.dungeon.BlockValues.ENEMY;
 
 public class Enemy extends Entity {
 
@@ -50,15 +52,15 @@ public class Enemy extends Entity {
     }
 
     private void seekCenter() {
-        Action dx = (map[0].length/2 > getX()) ? RIGHT : LEFT;
-        Action dy = (map.length/2 > getY()) ? DOWN : UP;
+        Action dx = (map[0].length / 2 > getX()) ? RIGHT : LEFT;
+        Action dy = (map.length / 2 > getY()) ? DOWN : UP;
         move(dx);
         move(dy);
 
-        if(canSeeTarget()) {
+        if (canSeeTarget()) {
             System.out.println("You have been spotted!");
             state = CHASE;
-        } else if(random.nextDouble() < .5) {
+        } else if (random.nextDouble() < .5) {
             state = WANDER;
 
         }
@@ -71,7 +73,7 @@ public class Enemy extends Entity {
         if (canSeeTarget()) {
             System.out.println("You have been spotted!");
             state = CHASE;
-        } else if( random.nextDouble() < .5){
+        } else if (random.nextDouble() < .5) {
             state = SEEK;
         }
 
@@ -87,7 +89,7 @@ public class Enemy extends Entity {
             targets.remove(0);
             state = WANDER;
         } else {
-            if(!isTouching(targets.get(0)))
+            if (!isTouching(targets.get(0)))
                 state = CHASE;
         }
 
@@ -102,9 +104,9 @@ public class Enemy extends Entity {
             moveRandomly();
         }
 
-        if(isTouching(targets.get(0))) {
+        if (isTouching(targets.get(0))) {
             state = ATTACK;
-        } else if( !canSeeTarget()){
+        } else if (!canSeeTarget()) {
             System.out.println("The enemy has lost your trail.");
             state = SEEK;
         }
@@ -129,7 +131,7 @@ public class Enemy extends Entity {
         this.map = map;
     }
 
-    private boolean canSeeTarget(){
+    private boolean canSeeTarget() {
         return (canSee(targets.get(0).getX(), targets.get(0).getY(), visionRange));
     }
 

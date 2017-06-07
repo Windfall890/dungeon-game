@@ -1,4 +1,4 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.dungeon;
 
 public enum Action {
     DOWN("DOWN"),

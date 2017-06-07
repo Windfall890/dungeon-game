@@ -1,6 +1,9 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.entity;
 
-import static com.jsaop.dungeon.Action.WAIT;
+import com.jsaop.dungeonGame.dungeon.Action;
+import com.jsaop.dungeonGame.dungeon.BlockValues;
+
+import static com.jsaop.dungeonGame.dungeon.Action.WAIT;
 
 public class Player extends Entity {
 
@@ -36,8 +39,8 @@ public class Player extends Entity {
         this.visionRange = visionRange;
     }
 
-    public boolean playerCanSee(int x, int y){
-        return canSee(x,y,visionRange);
+    public boolean playerCanSee(int x, int y) {
+        return canSee(x, y, visionRange);
     }
 }
 

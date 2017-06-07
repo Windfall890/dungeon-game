@@ -1,5 +1,6 @@
-package com.jsaop.dungeon
+package com.jsaop.dungeonGame
 
+import com.jsaop.dungeonGame.dungeon.Game
 import spock.lang.Specification
 
 class GameSpec extends Specification {

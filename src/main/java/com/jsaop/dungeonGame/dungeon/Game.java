@@ -1,4 +1,9 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.dungeon;
+
+import com.jsaop.dungeonGame.entity.Enemy;
+import com.jsaop.dungeonGame.entity.Entity;
+import com.jsaop.dungeonGame.entity.Goal;
+import com.jsaop.dungeonGame.entity.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -83,7 +88,7 @@ public class Game {
     private void updateExplored() {
         for (int x = 0; x < dungeon.getWidth(); x++) {
             for (int y = 0; y < dungeon.getHeight(); y++) {
-                if(player.playerCanSee(x,y)){
+                if (player.playerCanSee(x, y)) {
                     explored[x][y] = true;
                 }
             }
@@ -124,7 +129,7 @@ public class Game {
                     distanceEnemyToGoal = calcSquareDistance(player.getX(), player.getY(), i, j);
                     distanceEnemyToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
                     if (maxDistance < distanceEnemyToGoal && maxDistance < distanceEnemyToPlayer) {
-                        maxDistance = (distanceEnemyToGoal < distanceEnemyToPlayer)? distanceEnemyToGoal: distanceEnemyToPlayer;
+                        maxDistance = (distanceEnemyToGoal < distanceEnemyToPlayer) ? distanceEnemyToGoal : distanceEnemyToPlayer;
                         maxX = i;
                         maxY = j;
                     }
@@ -141,13 +146,13 @@ public class Game {
         int maxX = 0, maxY = 0;
         double distanceEnemy2ToPlayer;
         double distanceEnemy2ToEnemy;
-        for (int i = dungeon.getWidth()-1; i >= 0; i--) {
-            for (int j = dungeon.getHeight()-1; j > 0; j--) {
+        for (int i = dungeon.getWidth() - 1; i >= 0; i--) {
+            for (int j = dungeon.getHeight() - 1; j > 0; j--) {
                 if (masterMap[i][j] != '#') {
                     distanceEnemy2ToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
                     distanceEnemy2ToEnemy = calcSquareDistance(enemy.getX(), enemy.getY(), i, j);
                     if (maxDistance < distanceEnemy2ToPlayer && maxDistance < distanceEnemy2ToEnemy) {
-                        maxDistance = Math.max(distanceEnemy2ToEnemy,distanceEnemy2ToPlayer);
+                        maxDistance = Math.max(distanceEnemy2ToEnemy, distanceEnemy2ToPlayer);
                         maxX = i;
                         maxY = j;
                     }
@@ -158,14 +163,14 @@ public class Game {
         e.setX(maxX);
         e.setY(maxY);
 
-        if(e.canSee(player.getX(), player.getY(),player.getVisionRange())){
+        if (e.canSee(player.getX(), player.getY(), player.getVisionRange())) {
             pickEnemy2StartLocation(e);
         }
     }
 
 
     private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
-        return (double) ((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
+        return (double) ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
     }
 
     private boolean playerIsOnTreasure() {
@@ -197,9 +202,9 @@ public class Game {
 
         char[][] copy = dungeon.getMapCopy();
 
-        for (Entity e : entities) {
-            placeEntityOnMap(e,copy);
-        }
+//        for (Entity e : entities) {
+//            placeEntityOnMap(e, copy);
+//        }
 
         return copy;
     }
@@ -214,5 +219,9 @@ public class Game {
 
     public boolean isExplored(int x, int y) {
         return explored[x][y];
+    }
+
+    public List<Entity> getEntities() {
+        return entities;
     }
 }

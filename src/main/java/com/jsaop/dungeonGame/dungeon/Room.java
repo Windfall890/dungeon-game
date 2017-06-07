@@ -1,4 +1,4 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.dungeon;
 
 import java.util.Random;
 
@@ -51,7 +51,7 @@ public class Room {
         return y;
     }
 
-    public void translate(int x, int y){
+    public void translate(int x, int y) {
         this.x = x;
         this.y = y;
 
@@ -81,8 +81,8 @@ public class Room {
 
     public static Room randomRoom(int maxW, int maxH) {
         Random random = new Random();
-        int height = random.nextInt(maxH-5) +5;
-        int width = random.nextInt(maxW-5) +5;
-        return new Room(width,height, 0, 0);
+        int height = random.nextInt(maxH - 5) + 5;
+        int width = random.nextInt(maxW - 5) + 5;
+        return new Room(width, height, 0, 0);
     }
 }

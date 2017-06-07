@@ -1,11 +1,11 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.dungeon;
 
 public enum BlockValues {
     FLOOR('.'),
     WALL('#'),
     EMPTY(' '),
     PLAYER('@'),
-    GOAL('*'),
+    GOAL('<'),
     ENEMY('O');
 
     private final char value;

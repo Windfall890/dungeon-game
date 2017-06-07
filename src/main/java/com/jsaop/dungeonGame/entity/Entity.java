@@ -1,8 +1,10 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.entity;
+
+import com.jsaop.dungeonGame.dungeon.Action;
 
 import java.util.Random;
 
-import static com.jsaop.dungeon.BlockValues.WALL;
+import static com.jsaop.dungeonGame.dungeon.BlockValues.WALL;
 
 public class Entity {
 
@@ -48,8 +50,8 @@ public class Entity {
         hp = 0;
     }
 
-    public void damage(int d){
-        hp -=d;
+    public void damage(int d) {
+        hp -= d;
     }
 
     public void translate(int x, int y) {
@@ -85,7 +87,7 @@ public class Entity {
     }
 
     public boolean canSee(int x, int y, int range) {
-        return (calcSquareDistance(x, y, getX(), getY()) < (range*range));
+        return (calcSquareDistance(x, y, getX(), getY()) < (range * range));
 
     }
 
@@ -100,7 +102,7 @@ public class Entity {
     }
 
     private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
-        return (double) ((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
+        return (double) ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
     }
 
     public int getHp() {

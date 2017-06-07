@@ -1,5 +1,8 @@
-package com.jsaop.dungeon;
+package com.jsaop.dungeonGame.gui;
 
+import com.jsaop.dungeonGame.dungeon.Game;
+import com.jsaop.dungeonGame.entity.Entity;
+import com.jsaop.dungeonGame.entity.Player;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
@@ -16,25 +19,22 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import static com.jsaop.dungeon.Action.*;
-import static com.jsaop.dungeon.BlockValues.*;
+import static com.jsaop.dungeonGame.dungeon.Action.*;
+import static com.jsaop.dungeonGame.dungeon.BlockValues.*;
 
 
 public class App extends Application {
     public static final int WIDTH = 60;
     public static final int HEIGHT = 31;
-    public static final int CELL_DIMENSION = 12;
-    public static final boolean FOW_ENABLED = false;
-
+    public static final int CELL_DIMENSION = 14;
     public static final long DEFAULT_FRAME_DELAY = 100;
-
-    public static final Color FLOOR_COLOR = Color.DARKKHAKI;
-    public static final Color PLAYER_COLOR = Color.BLUEVIOLET;
+    public static final Color FLOOR_COLOR = Color.DARKKHAKI.darker();
+    public static final Color PLAYER_COLOR = Color.GOLD;
     public static final Color GOAL_COLOR = Color.BLUE;
     public static final Color ENEMY_COLOR = Color.LIMEGREEN;
     public static final Color UNEXPLORED_COLOR = Color.BLACK;
-    public static final Color WALL_COLOR = Color.DARKSLATEGRAY;
-
+    public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
+    public boolean fogOfWarEnabled = true;
     private Game game;
     private GridPane grid;
     private Text turn;
@@ -52,12 +52,12 @@ public class App extends Application {
 
         Label l = (Label) pane.getChildren().get(1);
         l.setText(c + "");
-        l.setStyle("-fx-text-fill: black");
+        l.setTextFill(fg);
     }
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        game = new Game(WIDTH, HEIGHT);
+        resetGame();
         System.out.println(game.getDungeon().getMapAsString());
 
         primaryStage.setTitle("Dungeon Game");
@@ -88,15 +88,16 @@ public class App extends Application {
         scene.setOnKeyReleased((KeyEvent event) -> {
             if (event.getCode() == KeyCode.SPACE)
                 handleKeyCodeSpace();
-            else if (event.getCode() == KeyCode.DOWN) {
+            else if (event.getCode() == KeyCode.N)
+                resetGame();
+            else if (event.getCode() == KeyCode.DOWN)
                 game.takeTurn(DOWN);
-            } else if (event.getCode() == KeyCode.UP)
+            else if (event.getCode() == KeyCode.UP)
                 game.takeTurn(UP);
             else if (event.getCode() == KeyCode.LEFT)
                 game.takeTurn(LEFT);
-            else if (event.getCode() == KeyCode.RIGHT) {
+            else if (event.getCode() == KeyCode.RIGHT)
                 game.takeTurn(RIGHT);
-            }
 
         });
 
@@ -106,18 +107,23 @@ public class App extends Application {
         startAnimation();
     }
 
+    private void resetGame() {
+        game = new Game(WIDTH, HEIGHT);
+    }
+
     private void handleKeyCodeSpace() {
+        fogOfWarEnabled = !fogOfWarEnabled;
     }
 
     private void createGridCell(int x, int y) {
         Rectangle r = new Rectangle();
         Label glyph = new Label("#");
-        glyph.setPrefSize(CELL_DIMENSION,CELL_DIMENSION);
+        glyph.setPrefSize(CELL_DIMENSION, CELL_DIMENSION);
         r.widthProperty().bind(glyph.widthProperty());
         r.heightProperty().bind(glyph.heightProperty());
 
         StackPane stackPane = new StackPane();
-        stackPane.getChildren().addAll(r,glyph);
+        stackPane.getChildren().addAll(r, glyph);
         GridPane.setConstraints(stackPane, x, y);
 
         grid.getChildren().add(stackPane);
@@ -151,6 +157,8 @@ public class App extends Application {
         alert.setContentText("I have a sad message for you: You are dead.");
         timeline.pause();
         alert.show();
+        resetGame();
+        timeline.play();
     }
 
     private void gameWin() {
@@ -160,13 +168,16 @@ public class App extends Application {
         alert.setContentText("I have a great message for you: You have won!");
         timeline.pause();
         alert.show();
-
+        resetGame();
+        timeline.play();
     }
 
     private void updateGrid() {
         for (int y = 0; y < HEIGHT; y++)
             for (int x = 0; x < WIDTH; x++)
                 updateCell(x, y);
+
+        updateEntities();
     }
 
     private void updateCell(int x, int y) {
@@ -174,31 +185,46 @@ public class App extends Application {
         Color bgColor = UNEXPLORED_COLOR;
         Color fgColor = UNEXPLORED_COLOR;
         char glyph = game.getMap()[x][y];
-        if (FOW_ENABLED && !game.isExplored(x, y)) {
+        if (fogOfWarEnabled && !game.isExplored(x, y)) {
             bgColor = UNEXPLORED_COLOR;
         } else {
             if (glyph == WALL.getValue()) {
-                bgColor = WALL_COLOR;
+                bgColor = WALL_BG_COLOR;
+                fgColor = Color.DARKCYAN.darker().darker().desaturate();
             } else if (glyph == FLOOR.getValue()) {
                 bgColor = FLOOR_COLOR;
-            } else if (glyph == PLAYER.getValue()) {
-                bgColor = PLAYER_COLOR;
-            } else if (glyph == GOAL.getValue()) {
-                bgColor = GOAL_COLOR;
-            } else if (glyph == ENEMY.getValue()) {
-                bgColor = ENEMY_COLOR;
+                fgColor = FLOOR_COLOR.darker().darker().desaturate();
             }
         }
 
         Player player = game.getPlayer();
-        if(!player.playerCanSee(x,y)){
-            if(bgColor == ENEMY_COLOR){
-                bgColor = FLOOR_COLOR; //hack to make enemies disappear
-                glyph = FLOOR.getValue();
-            }
+        if (!player.playerCanSee(x, y) && fogOfWarEnabled) {
             bgColor = bgColor.darker().darker();
         }
-        setTile(pane,bgColor, fgColor, glyph);
+        setTile(pane, bgColor, fgColor, glyph);
+    }
+
+    private void updateEntities() {
+        for (Entity e : game.getEntities()) {
+            if (game.getPlayer().playerCanSee(e.getX(), e.getY()) && fogOfWarEnabled) {
+                StackPane pane = getPane(e.getX(), e.getY());
+                char glyph = e.getGlyph();
+                Color bgColor = Color.TRANSPARENT;
+                Color fgColor = Color.TRANSPARENT;
+                if (glyph == PLAYER.getValue()) {
+                    bgColor = FLOOR_COLOR;
+                    fgColor = Color.YELLOW.brighter().saturate();
+                } else if (glyph == GOAL.getValue()) {
+                    bgColor = GOAL_COLOR;
+                    fgColor = Color.CORNFLOWERBLUE;
+                } else if (glyph == ENEMY.getValue()) {
+                    bgColor = ENEMY_COLOR;
+                    fgColor = Color.FIREBRICK.saturate();
+                }
+                setTile(pane, bgColor, fgColor, e.getGlyph());
+            }
+
+        }
     }
 
     private StackPane getPane(int x, int y) {
