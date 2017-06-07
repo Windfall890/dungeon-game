@@ -6,6 +6,7 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
@@ -23,13 +24,21 @@ public class App extends Application {
     public static final int WIDTH = 50;
     public static final int HEIGHT = 50;
     public static final int CELL_DIMENSION = 10;
-    public static final boolean FOW_ENABLED = false;
+    public static final boolean FOW_ENABLED = true;
 
     public static final long DEFAULT_FRAME_DELAY = 100;
+
+    public static final Color FLOOR_COLOR = Color.DARKKHAKI;
+    public static final Color PLAYER_COLOR = Color.BLUEVIOLET;
+    public static final Color GOAL_COLOR = Color.BLUE;
+    public static final Color ENEMY_COLOR = Color.LIMEGREEN;
+    public static final Color UNEXPLORED_COLOR = Color.BLACK;
+    public static final Color WALL_COLOR = Color.DARKSLATEGRAY;
 
     private Game game;
     private GridPane grid;
     private Text turn;
+    private Text hp;
     private Timeline timeline;
 
     public static void main(String[] args) {
@@ -58,9 +67,10 @@ public class App extends Application {
         }
 
         turn = new Text();
+        hp = new Text();
 
         Pane infoPane = new FlowPane();
-        infoPane.getChildren().addAll(turn);
+        infoPane.getChildren().addAll(turn, hp);
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turn.getScaleY());
 
         BorderPane root = new BorderPane();
@@ -70,7 +80,7 @@ public class App extends Application {
 
         //handle input
         Scene scene = new Scene(root);
-        scene.setOnKeyPressed((KeyEvent event) -> {
+        scene.setOnKeyReleased((KeyEvent event) -> {
             if (event.getCode() == KeyCode.SPACE)
                 handleKeyCodeSpace();
             else if (event.getCode() == KeyCode.DOWN) {
@@ -98,9 +108,15 @@ public class App extends Application {
         Rectangle r = new Rectangle();
         r.setWidth(CELL_DIMENSION);
         r.setHeight(CELL_DIMENSION);
+        Label glyph = new Label(".");
+        r.widthProperty().bind(glyph.widthProperty());
+        r.heightProperty().bind(glyph.heightProperty());
 
-        GridPane.setConstraints(r, x, y);
-        grid.getChildren().add(r);
+        StackPane stackPane = new StackPane();
+        stackPane.getChildren().addAll(r,glyph);
+        GridPane.setConstraints(stackPane, x, y);
+
+        grid.getChildren().add(stackPane);
     }
 
     private void startAnimation() {
@@ -116,6 +132,7 @@ public class App extends Application {
     private void updateAnimation() {
         updateGrid();
         turn.setText("Turn: " + game.getTurn());
+        hp.setText("    HP: " + game.getPlayer().getHp());
         if (game.hasWon())
             gameWin();
         if (game.getPlayer().isDead())
@@ -150,25 +167,36 @@ public class App extends Application {
 
     private void updateCell(int x, int y) {
         Rectangle r = getRectangle(x, y);
+        Color color = UNEXPLORED_COLOR;
         if (FOW_ENABLED && !game.isExplored(x, y)) {
-            setColor(r, Color.BLACK);
+            color = UNEXPLORED_COLOR;
         } else {
-            if (game.getMap()[x][y] == '#') {
-                setColor(r, Color.DARKSLATEGRAY);
-            } else if (game.getMap()[x][y] == FLOOR.getValue()) {
-                setColor(r, Color.BEIGE);
-            } else if (game.getMap()[x][y] == PLAYER.getValue()) {
-                setColor(r, Color.BLUEVIOLET);
-            } else if (game.getMap()[x][y] == GOAL.getValue()) {
-                setColor(r, Color.BLUE);
-            } else if (game.getMap()[x][y] == ENEMY.getValue()) {
-                setColor(r, Color.RED);
+            char tile = game.getMap()[x][y];
+            if (tile == WALL.getValue()) {
+                color = WALL_COLOR;
+            } else if (tile == FLOOR.getValue()) {
+                color = FLOOR_COLOR;
+            } else if (tile == PLAYER.getValue()) {
+                color = PLAYER_COLOR;
+            } else if (tile == GOAL.getValue()) {
+                color = GOAL_COLOR;
+            } else if (tile == ENEMY.getValue()) {
+                color = ENEMY_COLOR;
             }
         }
+
+        Player player = game.getPlayer();
+        if(!player.playerCanSee(x,y)){
+            if(color == ENEMY_COLOR){
+                color = FLOOR_COLOR; //hack to make enemies disappear
+            }
+            color = color.darker().darker();
+        }
+        setColor(r,color);
     }
 
     private Rectangle getRectangle(int x, int y) {
-        return (Rectangle) grid.getChildren().get(getIndex(x, y));
+        return (Rectangle) ((StackPane) grid.getChildren().get(getIndex(x, y))).getChildren().get(0);
     }
 
     private int getIndex(int x, int y) {

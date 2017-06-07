@@ -56,15 +56,11 @@ public class Dungeon {
     public void generate() {
         generateRooms(NUM_ROOMS);
         placeRooms();
-
         generateTunnels();
-
         System.out.println(getMapAsString());
-
     }
 
     private void generateRooms(int num) {
-
         for (int i = 0; i < num; i++) {
             int maxH = height / 3;
             int maxW = width / 3;

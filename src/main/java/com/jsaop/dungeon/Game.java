@@ -9,6 +9,7 @@ public class Game {
     private Player player;
     private Goal goal;
     private Enemy enemy;
+    private Enemy enemy2;
     private List<Entity> entities;
     private Dungeon dungeon;
     private char[][] masterMap;
@@ -32,18 +33,21 @@ public class Game {
         player = initPlayer();
         goal = new Goal();
         enemy = initEnemy();
+        enemy2 = initEnemy();
 
         entities = new ArrayList<>();
 
         entities.add(player);
         entities.add(goal);
         entities.add(enemy);
+        entities.add(enemy2);
 
         turn = 0;
         hasWon = false;
         pickPlayerStartLocation();
         pickGoalLocationFarFromPlayer();
-        pickEnemyStartLocation();
+        pickEnemyStartLocation(enemy);
+        pickEnemy2StartLocation(enemy2);
 
         updateExplored(); // starting view
     }
@@ -72,22 +76,19 @@ public class Game {
             hasWon = true;
 
         enemy.takeTurn();
+        enemy2.takeTurn();
 
     }
 
     private void updateExplored() {
         for (int x = 0; x < dungeon.getWidth(); x++) {
             for (int y = 0; y < dungeon.getHeight(); y++) {
-                if(player.canSee(x,y, 11)){
+                if(player.playerCanSee(x,y)){
                     explored[x][y] = true;
                 }
             }
         }
 
-    }
-
-    private boolean playerCanSee(int x, int y) {
-        return (calcSquareDistance(x, y, player.getX(), player.getY()) < 11);
     }
 
     private void pickGoalLocationFarFromPlayer() {
@@ -112,7 +113,7 @@ public class Game {
         goal.setY(maxY);
     }
 
-    private void pickEnemyStartLocation() {
+    private void pickEnemyStartLocation(Enemy enemy) {
         double maxDistance = 0;
         int maxX = 0, maxY = 0;
         double distanceEnemyToGoal;
@@ -134,6 +135,34 @@ public class Game {
         enemy.setX(maxX);
         enemy.setY(maxY);
     }
+
+    private void pickEnemy2StartLocation(Enemy e) {
+        double maxDistance = 0;
+        int maxX = 0, maxY = 0;
+        double distanceEnemy2ToPlayer;
+        double distanceEnemy2ToEnemy;
+        for (int i = dungeon.getWidth()-1; i >= 0; i--) {
+            for (int j = dungeon.getHeight()-1; j > 0; j--) {
+                if (masterMap[i][j] != '#') {
+                    distanceEnemy2ToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
+                    distanceEnemy2ToEnemy = calcSquareDistance(enemy.getX(), enemy.getY(), i, j);
+                    if (maxDistance < distanceEnemy2ToPlayer && maxDistance < distanceEnemy2ToEnemy) {
+                        maxDistance = Math.max(distanceEnemy2ToEnemy,distanceEnemy2ToPlayer);
+                        maxX = i;
+                        maxY = j;
+                    }
+                }
+            }
+        }
+
+        e.setX(maxX);
+        e.setY(maxY);
+
+        if(e.canSee(player.getX(), player.getY(),player.getVisionRange())){
+            pickEnemy2StartLocation(e);
+        }
+    }
+
 
     private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
         return (double) ((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));

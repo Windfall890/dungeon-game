@@ -85,7 +85,7 @@ public class Entity {
     }
 
     public boolean canSee(int x, int y, int range) {
-        return (calcSquareDistance(x, y, getX(), getY()) < range);
+        return (calcSquareDistance(x, y, getX(), getY()) < (range*range));
 
     }
 
@@ -101,5 +101,9 @@ public class Entity {
 
     private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
         return (double) ((x2 - x1)*(x2 - x1) + (y2 - y1)*(y2 - y1));
+    }
+
+    public int getHp() {
+        return hp;
     }
 }
