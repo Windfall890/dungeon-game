@@ -206,7 +206,7 @@ public class App extends Application {
 
     private void updateEntities() {
         for (Entity e : game.getEntities()) {
-            if (game.getPlayer().playerCanSee(e.getX(), e.getY()) && fogOfWarEnabled) {
+            if (game.getPlayer().playerCanSee(e.getX(), e.getY()) ) {
                 StackPane pane = getPane(e.getX(), e.getY());
                 char glyph = e.getGlyph();
                 Color bgColor = Color.TRANSPARENT;
