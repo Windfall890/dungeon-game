@@ -1,6 +1,9 @@
 package com.jsaop.dungeonGame.dungeon;
 
+import com.jsaop.dungeonGame.Util.Calculation;
+
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Random;
 
@@ -38,9 +41,20 @@ public class Dungeon {
     public String getMapAsString() {
         String s = "";
 
+
+        char[][] c = getMapCopy();
+        rooms.forEach(room -> {
+            //draw label of room ID on map
+            String roomId = "" + room.id;
+            int xOffset = 0;
+            for (char c1 : roomId.toCharArray()) {
+                c[room.getCenterX() + xOffset][room.getCenterY()] = c1;
+            }
+        });
+
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {
-                s += (map[j][i] + " ");
+                s += (c[j][i] + " ");
             }
             s += "\n";
         }
@@ -56,7 +70,14 @@ public class Dungeon {
         return height;
     }
 
-    public void generate() {
+    public Room getRoom(int id) {
+        return rooms.stream()
+                .filter(room -> room.id == id)
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
+    }
+
+    private void generate() {
         generateRooms(NUM_ROOMS);
         placeRooms();
         generateTunnels();
@@ -67,8 +88,13 @@ public class Dungeon {
         for (int i = 0; i < num; i++) {
             int maxH = height / 3;
             int maxW = width / 3;
-            rooms.add(Room.randomRoom(maxW, maxH, random));
+            addRoom(Room.randomRoom(maxW, maxH, random));
         }
+    }
+
+    private void addRoom(Room room) {
+        room.id = rooms.size();
+        rooms.add(room);
     }
 
     private void placeRooms() {
@@ -155,11 +181,19 @@ public class Dungeon {
         return copy;
     }
 
-    public char getTile(int x, int y) {
-        return map[x][y];
-    }
-
     public char[][] getMap() {
         return map;
+    }
+
+    public Room GetRoomNearest(int x, int y) {
+        return rooms.stream()
+                .min(Comparator.comparingDouble(room -> Calculation.SquareDistance(room.getX(), room.getY(), x, y)))
+                .orElseThrow(RuntimeException::new);
+    }
+
+
+
+    public List<Room> GetRooms() {
+        return rooms;
     }
 }

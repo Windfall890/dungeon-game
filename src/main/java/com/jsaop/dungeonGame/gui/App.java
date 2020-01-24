@@ -16,13 +16,13 @@ import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.*;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.PrintStream;
 
 import static com.jsaop.dungeonGame.dungeon.Action.*;
 import static com.jsaop.dungeonGame.dungeon.BlockValues.*;
@@ -33,12 +33,14 @@ public class App extends Application {
     public static final int HEIGHT = 31;
     public static final int CELL_DIMENSION = 14;
     public static final long DEFAULT_FRAME_DELAY = 100;
+
     public static final Color FLOOR_COLOR = Color.DARKKHAKI.darker();
     public static final Color PLAYER_COLOR = Color.GOLD;
     public static final Color GOAL_COLOR = Color.BLUE;
     public static final Color ENEMY_COLOR = Color.LIMEGREEN;
     public static final Color UNEXPLORED_COLOR = Color.BLACK;
     public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
+
     public boolean fogOfWarEnabled = true;
     private Game game;
     private GridPane grid;
@@ -53,24 +55,11 @@ public class App extends Application {
         launch(args);
     }
 
-    private static void setTile(StackPane pane, Color bg, Color fg, char c) {
-        Rectangle r = (Rectangle) pane.getChildren().get(0);
-        r.setFill(bg);
-        r.setStroke(bg);
-
-        Label l = (Label) pane.getChildren().get(1);
-        l.setText(c + "");
-        l.setTextFill(fg);
-    }
-
     @Override
     public void start(Stage primaryStage) throws Exception {
         baos = new ByteArrayOutputStream();
-        consoleOut = new PrintStream(new BufferedOutputStream(baos));
-
 
         resetGame();
-        System.out.println(game.getDungeon().getMapAsString());
 
         primaryStage.setTitle("Dungeon Game");
 
@@ -94,8 +83,13 @@ public class App extends Application {
 
         //CONSOLE
         console = new TextArea("Use the Arrow keys to move\nEscape to the stairs!\nGood Luck!\n");
-//        console.setFont(Font.font("courier", FontWeight.BOLD, 1.0));
-
+        console.setStyle("-fx-control-inner-background:" + colorToHex(WALL_BG_COLOR) + "; " +
+                "-fx-font-family: Consolas; " +
+                "-fx-highlight-text-fill: #000000; " +
+                "-fx-text-fill: " + colorToHex(PLAYER_COLOR) + ";" +
+                "-fx-padding: 0 0 50 0");
+        console.setPrefWidth(CELL_DIMENSION * WIDTH);
+        console.setEditable(false);
 
         //PUT IT IN THE POT MMMM TASTEY
         BorderPane root = new BorderPane();
@@ -103,13 +97,14 @@ public class App extends Application {
         root.setTop(infoPane);
         root.setCenter(grid);
         root.setBottom(console);
+        root.getBottom().autosize();
 
         //handle input
         Scene scene = new Scene(root);
         scene.setOnKeyReleased((KeyEvent event) -> {
-            if (event.getCode() == KeyCode.SPACE)
-                handleKeyCodeSpace();
-            else if (event.getCode() == KeyCode.N)
+            if (event.getCode() == KeyCode.BACK_QUOTE)
+                handleDebugMode();
+            else if (event.getCode() == KeyCode.R)
                 resetGame();
             else if (event.getCode() == KeyCode.DOWN)
                 game.takeTurn(DOWN);
@@ -124,21 +119,39 @@ public class App extends Application {
 
         //show window and start game loop
         primaryStage.setScene(scene);
+        primaryStage.sizeToScene();
         primaryStage.show();
         startAnimation();
     }
 
+
+    private static String colorToHex(Color color) {
+        String s = color.toString();
+        return "#" + s.substring(2);
+    }
+
+    private static void setTile(StackPane pane, Color bg, Color fg, char c) {
+        Rectangle r = (Rectangle) pane.getChildren().get(0);
+        r.setFill(bg);
+        r.setStroke(bg);
+
+        Label l = (Label) pane.getChildren().get(1);
+        l.setText(c + "");
+        l.setTextFill(fg);
+    }
+
     private void resetGame() {
+        consoleOut = new PrintStream(new BufferedOutputStream(baos));
         game = new Game(WIDTH, HEIGHT, consoleOut);
     }
 
-    private void handleKeyCodeSpace() {
+    private void handleDebugMode() {
         fogOfWarEnabled = !fogOfWarEnabled;
     }
 
     private void createGridCell(int x, int y) {
         Rectangle r = new Rectangle();
-        Label glyph = new Label("#");
+        Label glyph = new Label("" + WALL.getValue());
         glyph.setPrefSize(CELL_DIMENSION, CELL_DIMENSION);
         r.widthProperty().bind(glyph.widthProperty());
         r.heightProperty().bind(glyph.heightProperty());
@@ -177,7 +190,6 @@ public class App extends Application {
         consoleOut.flush();
         String text = baos.toString();
         console.appendText(text);
-        console.selectPositionCaret(console.getLength());
         baos.reset();
     }
 
@@ -237,7 +249,7 @@ public class App extends Application {
 
     private void updateEntities() {
         for (Entity e : game.getEntities()) {
-            if (game.getPlayer().playerCanSee(e.getX(), e.getY())) {
+            if (game.getPlayer().playerCanSee(e.getX(), e.getY()) || !fogOfWarEnabled) {
                 StackPane pane = getPane(e.getX(), e.getY());
                 char glyph = e.getGlyph();
                 Color bgColor = Color.TRANSPARENT;

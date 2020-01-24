@@ -1,10 +1,14 @@
 package com.jsaop.dungeonGame.dungeon;
 
+import com.jsaop.dungeonGame.Util.Calculation;
 import com.jsaop.dungeonGame.entity.*;
 
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
+
+import static java.util.stream.Collectors.*;
 
 
 public class Game {
@@ -12,12 +16,12 @@ public class Game {
     private Goal goal;
     private Enemy enemy;
     private Enemy enemy2;
-    private List<Entity> entities;
     private Dungeon dungeon;
     private char[][] masterMap;
     private boolean[][] explored;
     private int turn;
     private boolean hasWon;
+    private EntityManager ems;
 
     public Game() {
         this(100, 100, System.out);
@@ -28,29 +32,21 @@ public class Game {
         dungeon = new Dungeon(width, height, random);
         masterMap = dungeon.getMap();
         explored = new boolean[width][height];
-        EntityManager entityManager = new EntityManager(random, out, masterMap);
 
-        player = entityManager.Player();
-        goal = entityManager.Goal();
-        enemy = entityManager.AddEnemy();
-        enemy2 = entityManager.AddEnemy();
-
-        entities = entityManager.GetEntities();
+        ems = new EntityManager(random, out, masterMap);
+        player = ems.Player();
+        goal = ems.Goal();
+        enemy = ems.AddEnemy();
+        enemy2 = ems.AddEnemy();
 
         turn = 0;
         hasWon = false;
+
+        //IN ORDER!
         pickPlayerStartLocation();
         pickGoalLocationFarFromPlayer();
-
-        //yooo wtffff jon
-        try {
-            pickEnemyStartLocation(enemy);
-            pickEnemy2StartLocation(enemy2);
-        } catch (StackOverflowError ex) {
-            out.println("Exploded on pick enemy start. trying one more time");
-            pickEnemyStartLocation(enemy);
-            pickEnemy2StartLocation(enemy2);
-        }
+        pickEnemyStartLocationBetter(enemy);
+        pickEnemyStartLocationBetter(enemy2);
 
         updateExplored(); // starting view
     }
@@ -89,7 +85,7 @@ public class Game {
         for (int i = 0; i < dungeon.getWidth(); i++) {
             for (int j = 0; j < dungeon.getHeight(); j++) {
                 if (masterMap[i][j] != BlockValues.WALL.getValue()) {
-                    tempDistance = calcSquareDistance(player.getX(), player.getY(), i, j);
+                    tempDistance = Calculation.SquareDistance(player.getX(), player.getY(), i, j);
                     if (maxDistance < tempDistance) {
                         maxDistance = tempDistance;
                         maxX = i;
@@ -103,59 +99,24 @@ public class Game {
         goal.setY(maxY);
     }
 
-    private void pickEnemyStartLocation(Enemy enemy) {
-        double maxDistance = 0;
-        int maxX = 0, maxY = 0;
-        double distanceEnemyToGoal;
-        double distanceEnemyToPlayer;
-        for (int i = 0; i < dungeon.getWidth(); i++) {
-            for (int j = 0; j < dungeon.getHeight(); j++) {
-                if (masterMap[i][j] != BlockValues.WALL.getValue()) {
-                    distanceEnemyToGoal = calcSquareDistance(player.getX(), player.getY(), i, j);
-                    distanceEnemyToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
-                    if (maxDistance < distanceEnemyToGoal && maxDistance < distanceEnemyToPlayer) {
-                        maxDistance = (distanceEnemyToGoal < distanceEnemyToPlayer) ? distanceEnemyToGoal : distanceEnemyToPlayer;
-                        maxX = i;
-                        maxY = j;
-                    }
-                }
-            }
-        }
-
-        enemy.setX(maxX);
-        enemy.setY(maxY);
-    }
-
-    private void pickEnemy2StartLocation(Enemy e) {
-        double maxDistance = 0;
-        int maxX = 0, maxY = 0;
-        double distanceEnemy2ToPlayer;
-        double distanceEnemy2ToEnemy;
-        for (int i = dungeon.getWidth() - 1; i >= 0; i--) {
-            for (int j = dungeon.getHeight() - 1; j > 0; j--) {
-                if (masterMap[i][j] != BlockValues.WALL.getValue()) {
-                    distanceEnemy2ToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
-                    distanceEnemy2ToEnemy = calcSquareDistance(enemy.getX(), enemy.getY(), i, j);
-                    if (maxDistance < distanceEnemy2ToPlayer && maxDistance < distanceEnemy2ToEnemy) {
-                        maxDistance = Math.max(distanceEnemy2ToEnemy, distanceEnemy2ToPlayer);
-                        maxX = i;
-                        maxY = j;
-                    }
-                }
-            }
-        }
-
-        e.setX(maxX);
-        e.setY(maxY);
-
-        if (e.canSee(player.getX(), player.getY(), player.getVisionRange())) {
-            pickEnemy2StartLocation(e);
-        }
-    }
+    private void pickEnemyStartLocationBetter(Enemy e) {
+        Room playerRoom = dungeon.GetRoomNearest(player.getX(), player.getY());
+        Room goalRoom = dungeon.GetRoomNearest(goal.getX(), goal.getY());
 
 
-    private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
-        return (double) ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
+        List<Integer> enemyRoomIds = ems.GetEnemies().stream()
+                .map(en -> dungeon.GetRoomNearest(en.getX(), en.getY()).id)
+                .collect(toList());
+
+        Room emptyRoom = dungeon.GetRooms().stream()
+                .filter(room -> room.id != playerRoom.id && room.id != goalRoom.id)
+                .filter(room -> !enemyRoomIds.contains(room.id)).findFirst().get();
+
+
+        e.setX(emptyRoom.getCenterX());
+        e.setY(emptyRoom.getCenterY());
+        System.out.println("enemy - X:" + e.getX() + " Y:" + e.getY());
+
     }
 
     private boolean playerIsOnTreasure() {
@@ -167,12 +128,9 @@ public class Game {
             for (int j = 0; j < dungeon.getHeight(); j++)
                 if (masterMap[i][j] != BlockValues.WALL.getValue()) {
                     player.translate(i, j);
+                    System.out.println("Player - X:" + player.getX() + " Y:" + player.getY());
                     return;
                 }
-    }
-
-    private static void placeEntityOnMap(Entity entity, char[][] map) {
-        map[entity.getX()][entity.getY()] = entity.getGlyph();
     }
 
     public Player getPlayer() {
@@ -185,13 +143,7 @@ public class Game {
 
     public char[][] getMap() {
 
-        char[][] copy = dungeon.getMapCopy();
-
-//        for (Entity e : entities) {
-//            placeEntityOnMap(e, copy);
-//        }
-
-        return copy;
+        return dungeon.getMapCopy();
     }
 
     public int getTurn() {
@@ -207,6 +159,6 @@ public class Game {
     }
 
     public List<Entity> getEntities() {
-        return entities;
+        return ems.GetEntities();
     }
 }

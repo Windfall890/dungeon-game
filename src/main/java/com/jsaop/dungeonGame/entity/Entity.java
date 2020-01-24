@@ -13,9 +13,10 @@ public class Entity {
     private static final int DEFAULT_HP = 10;
     public static PrintStream out = System.out;
 
-    protected Random random = new Random();
+    protected static Random random = new Random();
 
-    protected int id;
+    public int id = -1; // if -1, not in the entity manager
+    protected String name;
     protected int x;
     protected int y;
     protected char glyph;

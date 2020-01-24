@@ -1,6 +1,5 @@
 package com.jsaop.dungeonGame.entity;
 
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -9,7 +8,6 @@ import java.util.stream.Collectors;
 
 public class EntityManager {
 
-    private final Random random;
     private final Goal goal;
     private char[][] masterMap;
     private Player player;
@@ -17,8 +15,8 @@ public class EntityManager {
     private List<Entity> entities;
 
     public EntityManager(Random random, PrintStream printStream, char[][] masterMap) {
-        this.random = random;
         Entity.out = printStream;
+        Entity.random = random;
         this.masterMap = masterMap;
 
         this.entities = new ArrayList<>();

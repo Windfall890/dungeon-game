@@ -3,6 +3,7 @@ package com.jsaop.dungeonGame.dungeon;
 import java.util.Random;
 
 public class Room {
+    public int id = -1;
     private int width;
     private int height;
     private int x;

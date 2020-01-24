@@ -32,4 +32,9 @@ class SimpleDungeonSpec extends Specification {
             dungeon.mapAsString.findAll('\\.').size() > 0
 
     }
+
+    def "getRoomNearest works"() {
+        expect:
+            dungeon.GetRoomNearest(0,0).id != -1
+    }
 }

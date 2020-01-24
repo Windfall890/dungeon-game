@@ -25,6 +25,7 @@ public class Player extends Entity {
         this.y = y;
         this.glyph = glyph;
         this.hp = hp;
+        this.name = "Player";
     }
 
     public void execute(Action action) {

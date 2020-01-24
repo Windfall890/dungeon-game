@@ -31,6 +31,7 @@ public class Enemy extends Entity {
         this.glyph = glyph;
         this.targets = new ArrayList<>();
         this.power = power;
+        this.name = "Enemy";
     }
 
     public void takeTurn() {
