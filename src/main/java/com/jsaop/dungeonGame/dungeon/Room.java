@@ -79,8 +79,7 @@ public class Room {
         return result;
     }
 
-    public static Room randomRoom(int maxW, int maxH) {
-        Random random = new Random();
+    public static Room randomRoom(int maxW, int maxH, Random random) {
         int height = random.nextInt(maxH - 5) + 5;
         int width = random.nextInt(maxW - 5) + 5;
         return new Room(width, height, 0, 0);

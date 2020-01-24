@@ -2,6 +2,8 @@ package com.jsaop.dungeonGame.entity;
 
 import com.jsaop.dungeonGame.dungeon.Action;
 
+import java.io.OutputStream;
+import java.io.PrintStream;
 import java.util.Random;
 
 import static com.jsaop.dungeonGame.dungeon.BlockValues.WALL;
@@ -9,9 +11,11 @@ import static com.jsaop.dungeonGame.dungeon.BlockValues.WALL;
 public class Entity {
 
     private static final int DEFAULT_HP = 10;
+    public static PrintStream out = System.out;
 
     protected Random random = new Random();
 
+    protected int id;
     protected int x;
     protected int y;
     protected char glyph;
@@ -51,6 +55,7 @@ public class Entity {
     }
 
     public void damage(int d) {
+        out.println("You have been attacked for " + d + " damage.");
         hp -= d;
     }
 

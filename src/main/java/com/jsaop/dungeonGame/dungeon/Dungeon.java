@@ -2,6 +2,7 @@ package com.jsaop.dungeonGame.dungeon;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class Dungeon {
 
@@ -11,10 +12,12 @@ public class Dungeon {
     private char[][] map;
     private int width;
     private int height;
+    private Random random;
 
-    public Dungeon(int width, int height) {
+    public Dungeon(int width, int height, Random random) {
         this.height = height;
         this.width = width;
+        this.random = random;
         this.map = initMap(width, height);
         this.rooms = new ArrayList<>();
 
@@ -64,7 +67,7 @@ public class Dungeon {
         for (int i = 0; i < num; i++) {
             int maxH = height / 3;
             int maxW = width / 3;
-            rooms.add(Room.randomRoom(maxW, maxH));
+            rooms.add(Room.randomRoom(maxW, maxH, random));
         }
     }
 

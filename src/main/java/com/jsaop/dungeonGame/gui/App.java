@@ -10,14 +10,19 @@ import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import java.io.*;
 
 import static com.jsaop.dungeonGame.dungeon.Action.*;
 import static com.jsaop.dungeonGame.dungeon.BlockValues.*;
@@ -40,6 +45,9 @@ public class App extends Application {
     private Text turn;
     private Text hp;
     private Timeline timeline;
+    private TextArea console;
+    private PrintStream consoleOut;
+    private ByteArrayOutputStream baos;
 
     public static void main(String[] args) {
         launch(args);
@@ -57,11 +65,16 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
+        baos = new ByteArrayOutputStream();
+        consoleOut = new PrintStream(new BufferedOutputStream(baos));
+
+
         resetGame();
         System.out.println(game.getDungeon().getMapAsString());
 
         primaryStage.setTitle("Dungeon Game");
 
+        //grid
         grid = new GridPane();
         grid.setGridLinesVisible(false);
         grid.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, (CELL_DIMENSION * HEIGHT) + HEIGHT);
@@ -71,17 +84,25 @@ public class App extends Application {
             }
         }
 
+        //INFO
+        Pane infoPane = new FlowPane();
         turn = new Text();
         hp = new Text();
-
-        Pane infoPane = new FlowPane();
         infoPane.getChildren().addAll(turn, hp);
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turn.getScaleY());
 
+
+        //CONSOLE
+        console = new TextArea("Use the Arrow keys to move\nEscape to the stairs!\nGood Luck!\n");
+//        console.setFont(Font.font("courier", FontWeight.BOLD, 1.0));
+
+
+        //PUT IT IN THE POT MMMM TASTEY
         BorderPane root = new BorderPane();
         root.setBackground(Background.EMPTY);
         root.setTop(infoPane);
         root.setCenter(grid);
+        root.setBottom(console);
 
         //handle input
         Scene scene = new Scene(root);
@@ -108,7 +129,7 @@ public class App extends Application {
     }
 
     private void resetGame() {
-        game = new Game(WIDTH, HEIGHT);
+        game = new Game(WIDTH, HEIGHT, consoleOut);
     }
 
     private void handleKeyCodeSpace() {
@@ -143,11 +164,21 @@ public class App extends Application {
         updateGrid();
         turn.setText("Turn: " + game.getTurn());
         hp.setText("    HP: " + game.getPlayer().getHp());
+
+        updateConsole();
         if (game.hasWon())
             gameWin();
         if (game.getPlayer().isDead())
             gameLose();
 
+    }
+
+    private void updateConsole() {
+        consoleOut.flush();
+        String text = baos.toString();
+        console.appendText(text);
+        console.selectPositionCaret(console.getLength());
+        baos.reset();
     }
 
     private void gameLose() {
@@ -206,14 +237,14 @@ public class App extends Application {
 
     private void updateEntities() {
         for (Entity e : game.getEntities()) {
-            if (game.getPlayer().playerCanSee(e.getX(), e.getY()) ) {
+            if (game.getPlayer().playerCanSee(e.getX(), e.getY())) {
                 StackPane pane = getPane(e.getX(), e.getY());
                 char glyph = e.getGlyph();
                 Color bgColor = Color.TRANSPARENT;
                 Color fgColor = Color.TRANSPARENT;
                 if (glyph == PLAYER.getValue()) {
                     bgColor = FLOOR_COLOR;
-                    fgColor = Color.YELLOW.brighter().saturate();
+                    fgColor = PLAYER_COLOR;
                 } else if (glyph == GOAL.getValue()) {
                     bgColor = GOAL_COLOR;
                     fgColor = Color.CORNFLOWERBLUE;

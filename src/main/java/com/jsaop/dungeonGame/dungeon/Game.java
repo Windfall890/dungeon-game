@@ -1,11 +1,8 @@
 package com.jsaop.dungeonGame.dungeon;
 
-import com.jsaop.dungeonGame.entity.Enemy;
-import com.jsaop.dungeonGame.entity.Entity;
-import com.jsaop.dungeonGame.entity.Goal;
-import com.jsaop.dungeonGame.entity.Player;
+import com.jsaop.dungeonGame.entity.*;
 
-import java.util.ArrayList;
+import java.io.PrintStream;
 import java.util.List;
 import java.util.Random;
 
@@ -22,52 +19,40 @@ public class Game {
     private int turn;
     private boolean hasWon;
 
-    private Random random;
-
     public Game() {
-        this(100, 100);
+        this(100, 100, System.out);
     }
 
-    public Game(int width, int height) {
-        dungeon = new Dungeon(width, height);
+    public Game(int width, int height, PrintStream out) {
+        Random random = new Random();
+        dungeon = new Dungeon(width, height, random);
         masterMap = dungeon.getMap();
         explored = new boolean[width][height];
+        EntityManager entityManager = new EntityManager(random, out, masterMap);
 
-        random = new Random();
+        player = entityManager.Player();
+        goal = entityManager.Goal();
+        enemy = entityManager.AddEnemy();
+        enemy2 = entityManager.AddEnemy();
 
-        player = initPlayer();
-        goal = new Goal();
-        enemy = initEnemy();
-        enemy2 = initEnemy();
-
-        entities = new ArrayList<>();
-
-        entities.add(player);
-        entities.add(goal);
-        entities.add(enemy);
-        entities.add(enemy2);
+        entities = entityManager.GetEntities();
 
         turn = 0;
         hasWon = false;
         pickPlayerStartLocation();
         pickGoalLocationFarFromPlayer();
-        pickEnemyStartLocation(enemy);
-        pickEnemy2StartLocation(enemy2);
+
+        //yooo wtffff jon
+        try {
+            pickEnemyStartLocation(enemy);
+            pickEnemy2StartLocation(enemy2);
+        } catch (StackOverflowError ex) {
+            out.println("Exploded on pick enemy start. trying one more time");
+            pickEnemyStartLocation(enemy);
+            pickEnemy2StartLocation(enemy2);
+        }
 
         updateExplored(); // starting view
-    }
-
-    private Player initPlayer() {
-        Player player = new Player();
-        player.setMap(masterMap);
-        return player;
-    }
-
-    private Enemy initEnemy() {
-        Enemy enemy = new Enemy();
-        enemy.setMap(masterMap);
-        enemy.addTarget(player);
-        return enemy;
     }
 
     public void takeTurn(Action action) {
@@ -103,7 +88,7 @@ public class Game {
         double tempDistance;
         for (int i = 0; i < dungeon.getWidth(); i++) {
             for (int j = 0; j < dungeon.getHeight(); j++) {
-                if (masterMap[i][j] != '#') {
+                if (masterMap[i][j] != BlockValues.WALL.getValue()) {
                     tempDistance = calcSquareDistance(player.getX(), player.getY(), i, j);
                     if (maxDistance < tempDistance) {
                         maxDistance = tempDistance;
@@ -125,7 +110,7 @@ public class Game {
         double distanceEnemyToPlayer;
         for (int i = 0; i < dungeon.getWidth(); i++) {
             for (int j = 0; j < dungeon.getHeight(); j++) {
-                if (masterMap[i][j] != '#') {
+                if (masterMap[i][j] != BlockValues.WALL.getValue()) {
                     distanceEnemyToGoal = calcSquareDistance(player.getX(), player.getY(), i, j);
                     distanceEnemyToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
                     if (maxDistance < distanceEnemyToGoal && maxDistance < distanceEnemyToPlayer) {
@@ -148,7 +133,7 @@ public class Game {
         double distanceEnemy2ToEnemy;
         for (int i = dungeon.getWidth() - 1; i >= 0; i--) {
             for (int j = dungeon.getHeight() - 1; j > 0; j--) {
-                if (masterMap[i][j] != '#') {
+                if (masterMap[i][j] != BlockValues.WALL.getValue()) {
                     distanceEnemy2ToPlayer = calcSquareDistance(goal.getX(), goal.getY(), i, j);
                     distanceEnemy2ToEnemy = calcSquareDistance(enemy.getX(), enemy.getY(), i, j);
                     if (maxDistance < distanceEnemy2ToPlayer && maxDistance < distanceEnemy2ToEnemy) {
@@ -180,7 +165,7 @@ public class Game {
     private void pickPlayerStartLocation() {
         for (int i = 0; i < dungeon.getWidth(); i++)
             for (int j = 0; j < dungeon.getHeight(); j++)
-                if (masterMap[i][j] != '#') {
+                if (masterMap[i][j] != BlockValues.WALL.getValue()) {
                     player.translate(i, j);
                     return;
                 }

@@ -9,9 +9,9 @@ class SimpleDungeonSpec extends Specification {
     Dungeon dungeon
     static WIDTH = 50
     static HEIGHT = 40
-
+    static random = new Random()
     void setup() {
-        dungeon = new Dungeon(WIDTH, HEIGHT)
+        dungeon = new Dungeon(WIDTH, HEIGHT, random)
     }
 
     def "map can be changed"() {
@@ -26,7 +26,7 @@ class SimpleDungeonSpec extends Specification {
     }
 
     def "dungeon can generate ... a dungeon"() {
-        Dungeon dungeon = new Dungeon(50, 50)
+        Dungeon dungeon = new Dungeon(50, 50, random)
 
         expect:
             dungeon.mapAsString.findAll('\\.').size() > 0
