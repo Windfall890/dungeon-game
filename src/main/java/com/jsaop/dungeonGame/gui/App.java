@@ -97,7 +97,6 @@ public class App extends Application {
         root.setTop(infoPane);
         root.setCenter(grid);
         root.setBottom(console);
-        root.getBottom().autosize();
 
         //handle input
         Scene scene = new Scene(root);
@@ -119,7 +118,6 @@ public class App extends Application {
 
         //show window and start game loop
         primaryStage.setScene(scene);
-        primaryStage.sizeToScene();
         primaryStage.show();
         startAnimation();
     }

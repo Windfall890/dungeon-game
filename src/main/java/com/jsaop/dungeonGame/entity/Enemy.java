@@ -10,12 +10,12 @@ import static com.jsaop.dungeonGame.dungeon.BlockValues.ENEMY;
 
 public class Enemy extends Entity {
 
-    public static final int CHASE = 1;
-    public static final int WANDER = 0;
-    public static final int ATTACK = 2;
-    public static final int SEEK = 3;
+    private static final int CHASE = 1;
+    private static final int WANDER = 0;
+    private static final int ATTACK = 2;
+    private static final int SEEK = 3;
 
-    private static final int DEFAULT_ENEMY_POWER = 5;
+    public static final int DEFAULT_ENEMY_POWER = 5;
     private List<Entity> targets;
     private int power;
     private int state;
@@ -83,6 +83,7 @@ public class Enemy extends Entity {
 
     private void attack() {
         targets.get(0).damage(power);
+        out.println(name + "Attacks!");
 
         if (targets.get(0).isDead()) {
             targets.remove(0);
@@ -94,7 +95,7 @@ public class Enemy extends Entity {
 
     }
 
-    public void chase() {
+    private void chase() {
 
         if (random.nextDouble() > .3) {
             moveTowardsPlayer();

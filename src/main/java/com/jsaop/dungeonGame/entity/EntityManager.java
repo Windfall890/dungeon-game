@@ -56,7 +56,7 @@ public class EntityManager {
         return entities;
     }
 
-    public List<Entity> GetEnemies() {
+    public List<Entity> GetNpcs() {
         return entities.stream().filter(entity -> entity.getClass() == Enemy.class).collect(Collectors.toList());
     }
 }

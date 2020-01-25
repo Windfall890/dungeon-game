@@ -1,8 +1,8 @@
 package com.jsaop.dungeonGame.entity;
 
+import com.jsaop.dungeonGame.Util.Calculation;
 import com.jsaop.dungeonGame.dungeon.Action;
 
-import java.io.OutputStream;
 import java.io.PrintStream;
 import java.util.Random;
 
@@ -56,7 +56,7 @@ public class Entity {
     }
 
     public void damage(int d) {
-        out.println("You have been attacked for " + d + " damage.");
+        out.println( name + "has taken " + d + " damage.");
         hp -= d;
     }
 
@@ -93,7 +93,7 @@ public class Entity {
     }
 
     public boolean canSee(int x, int y, int range) {
-        return (calcSquareDistance(x, y, getX(), getY()) < (range * range));
+        return (Calculation.SquareDistance(x, y, getX(), getY()) < (range * range));
 
     }
 
@@ -107,9 +107,6 @@ public class Entity {
         this.map = map;
     }
 
-    private static double calcSquareDistance(int x1, int y1, int x2, int y2) {
-        return (double) ((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1));
-    }
 
     public int getHp() {
         return hp;

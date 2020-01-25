@@ -6,7 +6,6 @@ import com.jsaop.dungeonGame.entity.*;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Random;
-import java.util.stream.Collectors;
 
 import static java.util.stream.Collectors.*;
 
@@ -16,6 +15,7 @@ public class Game {
     private Goal goal;
     private Enemy enemy;
     private Enemy enemy2;
+    private final List<Entity> npcs;
     private Dungeon dungeon;
     private char[][] masterMap;
     private boolean[][] explored;
@@ -36,6 +36,8 @@ public class Game {
         ems = new EntityManager(random, out, masterMap);
         player = ems.Player();
         goal = ems.Goal();
+
+        npcs = ems.GetNpcs();
         enemy = ems.AddEnemy();
         enemy2 = ems.AddEnemy();
 
@@ -104,7 +106,7 @@ public class Game {
         Room goalRoom = dungeon.GetRoomNearest(goal.getX(), goal.getY());
 
 
-        List<Integer> enemyRoomIds = ems.GetEnemies().stream()
+        List<Integer> enemyRoomIds = ems.GetNpcs().stream()
                 .map(en -> dungeon.GetRoomNearest(en.getX(), en.getY()).id)
                 .collect(toList());
 

@@ -3,16 +3,12 @@ package com.jsaop.dungeonGame.entity;
 import com.jsaop.dungeonGame.dungeon.Action;
 import com.jsaop.dungeonGame.dungeon.BlockValues;
 
-import java.io.OutputStream;
-import java.io.PrintStream;
-import java.sql.DriverManager;
 
 import static com.jsaop.dungeonGame.dungeon.Action.WAIT;
 
 public class Player extends Entity {
 
-
-    private static final int STARTING_PLAYER_HP = 15;
+    public static final int STARTING_PLAYER_HP = 15;
 
     private int visionRange = 5;
 
@@ -33,7 +29,7 @@ public class Player extends Entity {
             move(action);
 
         if (action == WAIT)
-           out.println("player is waiting");
+            out.println("player is waiting");
     }
 
     public int getVisionRange() {
