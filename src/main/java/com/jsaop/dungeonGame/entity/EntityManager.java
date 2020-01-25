@@ -14,7 +14,7 @@ public class EntityManager {
     private int IdCounter = 0;
     private List<Entity> entities;
 
-    public EntityManager(Random random, PrintStream printStream, char[][] masterMap) {
+    public EntityManager(Random random, PrintStream printStream, char[][] masterMap, int level) {
         Entity.out = printStream;
         Entity.random = random;
         this.masterMap = masterMap;
@@ -27,6 +27,28 @@ public class EntityManager {
 
         this.goal = new Goal();
         add(this.goal);
+
+        spawnEnemies(level);
+
+
+    }
+
+    private void spawnEnemies(int level) {
+
+        addEnemy();
+
+        if (level >= 2) {
+            addEnemy();
+        }
+        if (level >= 4) {
+            addEnemy();
+        }
+        if (level >= 6) {
+            addEnemy();
+        }
+        if (level >= 8) {
+            addEnemy();
+        }
     }
 
     private void add(Entity e) {
@@ -41,10 +63,10 @@ public class EntityManager {
     }
 
     public Goal Goal() {
-       return goal;
+        return goal;
     }
 
-    public Enemy AddEnemy() {
+    public Enemy addEnemy() {
         Enemy enemy = new Enemy();
         enemy.setMap(masterMap);
         enemy.addTarget(player);

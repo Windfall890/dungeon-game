@@ -13,6 +13,10 @@ public class Goal extends Entity {
         this.y = y;
         this.glyph = glyph;
     }
+
+    @Override
+    public void takeTurn() {
+    }
 }
 
 

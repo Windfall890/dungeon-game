@@ -13,8 +13,6 @@ import static java.util.stream.Collectors.*;
 public class Game {
     private Player player;
     private Goal goal;
-    private Enemy enemy;
-    private Enemy enemy2;
     private final List<Entity> npcs;
     private Dungeon dungeon;
     private char[][] masterMap;
@@ -22,24 +20,24 @@ public class Game {
     private int turn;
     private boolean hasWon;
     private EntityManager ems;
+    private int level;
 
     public Game() {
-        this(100, 100, System.out);
+        this(100, 100, 1, System.out);
     }
 
-    public Game(int width, int height, PrintStream out) {
+    public Game(int width, int height, int level, PrintStream out) {
+        this.level = level;
+
         Random random = new Random();
         dungeon = new Dungeon(width, height, random);
         masterMap = dungeon.getMap();
         explored = new boolean[width][height];
 
-        ems = new EntityManager(random, out, masterMap);
+        ems = new EntityManager(random, out, masterMap, level);
         player = ems.Player();
         goal = ems.Goal();
-
         npcs = ems.GetNpcs();
-        enemy = ems.AddEnemy();
-        enemy2 = ems.AddEnemy();
 
         turn = 0;
         hasWon = false;
@@ -47,11 +45,12 @@ public class Game {
         //IN ORDER!
         pickPlayerStartLocation();
         pickGoalLocationFarFromPlayer();
-        pickEnemyStartLocationBetter(enemy);
-        pickEnemyStartLocationBetter(enemy2);
+        npcs.forEach(this::pickNpcStartLocationBetter);
 
         updateExplored(); // starting view
     }
+
+
 
     public void takeTurn(Action action) {
         turn++;
@@ -63,9 +62,7 @@ public class Game {
         if (playerIsOnTreasure())
             hasWon = true;
 
-        enemy.takeTurn();
-        enemy2.takeTurn();
-
+        npcs.forEach(Entity::takeTurn);
     }
 
     private void updateExplored() {
@@ -101,7 +98,7 @@ public class Game {
         goal.setY(maxY);
     }
 
-    private void pickEnemyStartLocationBetter(Enemy e) {
+    private void pickNpcStartLocationBetter(Entity e) {
         Room playerRoom = dungeon.GetRoomNearest(player.getX(), player.getY());
         Room goalRoom = dungeon.GetRoomNearest(goal.getX(), goal.getY());
 
@@ -162,5 +159,9 @@ public class Game {
 
     public List<Entity> getEntities() {
         return ems.GetEntities();
+    }
+
+    public void numberEnemies() {
+        ems.GetNpcs().size();
     }
 }

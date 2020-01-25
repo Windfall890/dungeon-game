@@ -8,7 +8,7 @@ import java.util.Random;
 
 import static com.jsaop.dungeonGame.dungeon.BlockValues.WALL;
 
-public class Entity {
+public abstract class Entity {
 
     private static final int DEFAULT_HP = 10;
     public static PrintStream out = System.out;
@@ -60,10 +60,8 @@ public class Entity {
         hp -= d;
     }
 
-    public void translate(int x, int y) {
-        this.x = x;
-        this.y = y;
-    }
+    public abstract void takeTurn();
+
 
     public void move(Action direction) {
         switch (direction) {
@@ -85,6 +83,11 @@ public class Entity {
                 break;
             default:
         }
+    }
+
+    public void translate(int x, int y) {
+        this.x = x;
+        this.y = y;
     }
 
     public boolean isTouching(Entity b) {

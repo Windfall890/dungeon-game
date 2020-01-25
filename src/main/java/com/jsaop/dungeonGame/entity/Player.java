@@ -43,5 +43,10 @@ public class Player extends Entity {
     public boolean playerCanSee(int x, int y) {
         return canSee(x, y, visionRange);
     }
+
+    @Override
+    public void takeTurn() {
+
+    }
 }
 

@@ -6,6 +6,7 @@ import com.jsaop.dungeonGame.entity.Player;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
+import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -50,6 +51,9 @@ public class App extends Application {
     private TextArea console;
     private PrintStream consoleOut;
     private ByteArrayOutputStream baos;
+    private int level = 1;
+    private Text levelText;
+    private Text enemyCounter;
 
     public static void main(String[] args) {
         launch(args);
@@ -59,7 +63,6 @@ public class App extends Application {
     public void start(Stage primaryStage) throws Exception {
         baos = new ByteArrayOutputStream();
 
-        resetGame();
 
         primaryStage.setTitle("Dungeon Game");
 
@@ -74,10 +77,14 @@ public class App extends Application {
         }
 
         //INFO
-        Pane infoPane = new FlowPane();
+        FlowPane infoPane = new FlowPane();
+        infoPane.setHgap(20);
+
         turn = new Text();
         hp = new Text();
-        infoPane.getChildren().addAll(turn, hp);
+        enemyCounter =  new Text();
+        levelText = new Text("Level: " + level);
+        infoPane.getChildren().addAll(new HBox(turn), new HBox(hp), new HBox(levelText));
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turn.getScaleY());
 
 
@@ -100,26 +107,42 @@ public class App extends Application {
 
         //handle input
         Scene scene = new Scene(root);
-        scene.setOnKeyReleased((KeyEvent event) -> {
-            if (event.getCode() == KeyCode.BACK_QUOTE)
-                handleDebugMode();
-            else if (event.getCode() == KeyCode.R)
-                resetGame();
-            else if (event.getCode() == KeyCode.DOWN)
-                game.takeTurn(DOWN);
-            else if (event.getCode() == KeyCode.UP)
-                game.takeTurn(UP);
-            else if (event.getCode() == KeyCode.LEFT)
-                game.takeTurn(LEFT);
-            else if (event.getCode() == KeyCode.RIGHT)
-                game.takeTurn(RIGHT);
-
-        });
+        scene.setOnKeyReleased(this::HandleEvents);
 
         //show window and start game loop
+        resetGame();
         primaryStage.setScene(scene);
         primaryStage.show();
         startAnimation();
+    }
+
+    private void HandleEvents(KeyEvent event) {
+        switch (event.getCode()) {
+            case BACK_QUOTE:
+                handleDebugMode();
+                break;
+            case R:
+                resetGame();
+                break;
+            case CLOSE_BRACKET:
+                nextLevel();
+                break;
+            case Z:
+                game.takeTurn(WAIT);
+                break;
+            case DOWN:
+                game.takeTurn(DOWN);
+                break;
+            case UP:
+                game.takeTurn(UP);
+                break;
+            case LEFT:
+                game.takeTurn(LEFT);
+                break;
+            case RIGHT:
+                game.takeTurn(RIGHT);
+                break;
+        }
     }
 
 
@@ -139,9 +162,25 @@ public class App extends Application {
     }
 
     private void resetGame() {
-        consoleOut = new PrintStream(new BufferedOutputStream(baos));
-        game = new Game(WIDTH, HEIGHT, consoleOut);
+        changeLevel(1);
     }
+
+    private void nextLevel() {
+        changeLevel(level + 1);
+    }
+
+    private void previousLevel() {
+        if (level > 1)
+            changeLevel(level - 1);
+    }
+
+    private void changeLevel(int newLevel) {
+        this.level = newLevel;
+        levelText.setText("Level: " + level);
+        consoleOut = new PrintStream(new BufferedOutputStream(baos));
+        game = new Game(WIDTH, HEIGHT, level, consoleOut);
+    }
+
 
     private void handleDebugMode() {
         fogOfWarEnabled = !fogOfWarEnabled;
@@ -174,7 +213,7 @@ public class App extends Application {
     private void updateAnimation() {
         updateGrid();
         turn.setText("Turn: " + game.getTurn());
-        hp.setText("    HP: " + game.getPlayer().getHp());
+        hp.setText("HP: " + game.getPlayer().getHp());
 
         updateConsole();
         if (game.hasWon())
@@ -209,7 +248,7 @@ public class App extends Application {
         alert.setContentText("I have a great message for you: You have won!");
         timeline.pause();
         alert.show();
-        resetGame();
+        nextLevel();
         timeline.play();
     }
 
