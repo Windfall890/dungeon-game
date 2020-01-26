@@ -22,6 +22,8 @@ public class EntityManager {
         this.entities = new ArrayList<>();
 
         this.player = new Player();
+
+        player.setVisionRange(calcVisionRange(level));
         player.setMap(masterMap);
         add(player);
 
@@ -33,22 +35,27 @@ public class EntityManager {
 
     }
 
+    private int calcVisionRange(int level) {
+
+        if (level > 6) {
+
+            int range = Player.BASE_VISION_RANGE + 8 - level;
+
+            if (range < Player.MIN_VISION_RANGE)
+                return Player.MIN_VISION_RANGE;
+
+            return range;
+        }
+        return Player.BASE_VISION_RANGE;
+    }
+
     private void spawnEnemies(int level) {
 
-        addEnemy();
-
-        if (level >= 2) {
-            addEnemy();
-        }
-        if (level >= 4) {
-            addEnemy();
-        }
-        if (level >= 6) {
-            addEnemy();
-        }
-        if (level >= 8) {
-            addEnemy();
-        }
+        if (level > 1) addEnemy();
+        if (level > 2) addEnemy();
+        if (level > 4) addEnemy();
+        if (level > 6) addEnemy();
+        if (level > 8) addEnemy();
     }
 
     private void add(Entity e) {

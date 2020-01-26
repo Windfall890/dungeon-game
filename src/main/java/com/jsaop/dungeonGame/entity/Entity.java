@@ -23,6 +23,11 @@ public abstract class Entity {
     protected int hp = DEFAULT_HP;
     protected char[][] map;
 
+
+    protected void say(String phrase) {
+        out.println(name + " " + phrase.trim());
+    }
+
     public int getX() {
         return x;
     }
@@ -56,7 +61,7 @@ public abstract class Entity {
     }
 
     public void damage(int d) {
-        out.println( name + "has taken " + d + " damage.");
+        out.println(name + " has taken " + d + " damage.");
         hp -= d;
     }
 

@@ -161,7 +161,7 @@ public class Game {
         return ems.GetEntities();
     }
 
-    public void numberEnemies() {
-        ems.GetNpcs().size();
+    public int getNumberEnemies() {
+        return ems.GetNpcs().size();
     }
 }

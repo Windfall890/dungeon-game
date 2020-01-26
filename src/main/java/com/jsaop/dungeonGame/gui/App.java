@@ -6,24 +6,23 @@ import com.jsaop.dungeonGame.entity.Player;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Application;
-import javafx.geometry.Insets;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
-import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
+import javafx.scene.media.AudioClip;
+import javafx.scene.media.Media;
+import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
+import java.io.*;
 
 import static com.jsaop.dungeonGame.dungeon.Action.*;
 import static com.jsaop.dungeonGame.dungeon.BlockValues.*;
@@ -41,9 +40,10 @@ public class App extends Application {
     public static final Color ENEMY_COLOR = Color.LIMEGREEN;
     public static final Color UNEXPLORED_COLOR = Color.BLACK;
     public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
+    private static final int WIN_LEVEL = 15;
 
     public boolean fogOfWarEnabled = true;
-    private Game game;
+    private Game gameLevel;
     private GridPane grid;
     private Text turn;
     private Text hp;
@@ -54,6 +54,11 @@ public class App extends Application {
     private int level = 1;
     private Text levelText;
     private Text enemyCounter;
+
+    //sounds
+    private MediaPlayer mediaPlayer;
+    private AudioClip doorClose;
+    private AudioClip yaySound;
 
     public static void main(String[] args) {
         launch(args);
@@ -82,7 +87,7 @@ public class App extends Application {
 
         turn = new Text();
         hp = new Text();
-        enemyCounter =  new Text();
+        enemyCounter = new Text();
         levelText = new Text("Level: " + level);
         infoPane.getChildren().addAll(new HBox(turn), new HBox(hp), new HBox(levelText));
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turn.getScaleY());
@@ -109,11 +114,36 @@ public class App extends Application {
         Scene scene = new Scene(root);
         scene.setOnKeyReleased(this::HandleEvents);
 
-        //show window and start game loop
+        //start audio
+        initMediaPlayer();
+        mediaPlayer.play();
+        initSounds();
+
+        //show window and start gameLevel loop
         resetGame();
         primaryStage.setScene(scene);
         primaryStage.show();
         startAnimation();
+    }
+
+    private void initMediaPlayer() {
+
+        String resource = LoadResource("Ambient Cave-SoundBible.com-2124899044.wav");
+        Media sound = new Media(resource);
+        mediaPlayer = new MediaPlayer(sound);
+        mediaPlayer.setOnEndOfMedia(() -> {
+            mediaPlayer.seek(Duration.ZERO);
+            mediaPlayer.play();
+        });
+    }
+
+    private String LoadResource(String file) {
+        return this.getClass().getResource("/" + file).toString();
+    }
+
+    private void initSounds() {
+        doorClose = new AudioClip(LoadResource("Big_door_closed-Clemens_F-941522533.wav"));
+        yaySound = new AudioClip(LoadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
     }
 
     private void HandleEvents(KeyEvent event) {
@@ -127,20 +157,23 @@ public class App extends Application {
             case CLOSE_BRACKET:
                 nextLevel();
                 break;
+            case OPEN_BRACKET:
+                previousLevel();
+                break;
             case Z:
-                game.takeTurn(WAIT);
+                gameLevel.takeTurn(WAIT);
                 break;
             case DOWN:
-                game.takeTurn(DOWN);
+                gameLevel.takeTurn(DOWN);
                 break;
             case UP:
-                game.takeTurn(UP);
+                gameLevel.takeTurn(UP);
                 break;
             case LEFT:
-                game.takeTurn(LEFT);
+                gameLevel.takeTurn(LEFT);
                 break;
             case RIGHT:
-                game.takeTurn(RIGHT);
+                gameLevel.takeTurn(RIGHT);
                 break;
         }
     }
@@ -166,8 +199,10 @@ public class App extends Application {
     }
 
     private void nextLevel() {
+        doorClose.play();
         changeLevel(level + 1);
     }
+
 
     private void previousLevel() {
         if (level > 1)
@@ -178,7 +213,17 @@ public class App extends Application {
         this.level = newLevel;
         levelText.setText("Level: " + level);
         consoleOut = new PrintStream(new BufferedOutputStream(baos));
-        game = new Game(WIDTH, HEIGHT, level, consoleOut);
+        consoleOut.println(" --- Level: " + level + " ---");
+
+        gameLevel = new Game(WIDTH, HEIGHT, level, consoleOut);
+
+        consoleOut.println("you feel refreshed and have " + gameLevel.getPlayer().getHp() + " health");
+
+        int numberEnemies = gameLevel.getNumberEnemies();
+        if (numberEnemies == 1)
+            consoleOut.println("There is " + numberEnemies + " enemy");
+        else
+            consoleOut.println("There are " + numberEnemies + " enemies");
     }
 
 
@@ -212,13 +257,17 @@ public class App extends Application {
 
     private void updateAnimation() {
         updateGrid();
-        turn.setText("Turn: " + game.getTurn());
-        hp.setText("HP: " + game.getPlayer().getHp());
+        turn.setText("Turn: " + gameLevel.getTurn());
+        hp.setText("HP: " + gameLevel.getPlayer().getHp());
 
         updateConsole();
-        if (game.hasWon())
+
+        if (level > WIN_LEVEL)
             gameWin();
-        if (game.getPlayer().isDead())
+        if (gameLevel.hasWon())
+
+            nextLevel();
+        if (gameLevel.getPlayer().isDead())
             gameLose();
 
     }
@@ -232,9 +281,9 @@ public class App extends Application {
 
     private void gameLose() {
         Alert alert = new Alert(AlertType.WARNING);
-        alert.setTitle("YOU LOSE!");
-        alert.setHeaderText("You were zapped by a Guy!");
-        alert.setContentText("I have a sad message for you: You are dead.");
+        alert.setTitle("GAME OVER");
+        alert.setHeaderText("You were zapped.");
+        alert.setContentText("You reached the " + level + " level.");
         timeline.pause();
         alert.show();
         resetGame();
@@ -242,13 +291,14 @@ public class App extends Application {
     }
 
     private void gameWin() {
+        timeline.pause();
         Alert alert = new Alert(AlertType.CONFIRMATION);
         alert.setTitle("Winner!");
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
-        timeline.pause();
         alert.show();
-        nextLevel();
+        yaySound.play();
+        resetGame();
         timeline.play();
     }
 
@@ -264,8 +314,8 @@ public class App extends Application {
         StackPane pane = getPane(x, y);
         Color bgColor = UNEXPLORED_COLOR;
         Color fgColor = UNEXPLORED_COLOR;
-        char glyph = game.getMap()[x][y];
-        if (fogOfWarEnabled && !game.isExplored(x, y)) {
+        char glyph = gameLevel.getMap()[x][y];
+        if (fogOfWarEnabled && !gameLevel.isExplored(x, y)) {
             bgColor = UNEXPLORED_COLOR;
         } else {
             if (glyph == WALL.getValue()) {
@@ -277,7 +327,7 @@ public class App extends Application {
             }
         }
 
-        Player player = game.getPlayer();
+        Player player = gameLevel.getPlayer();
         if (!player.playerCanSee(x, y) && fogOfWarEnabled) {
             bgColor = bgColor.darker().darker();
         }
@@ -285,8 +335,8 @@ public class App extends Application {
     }
 
     private void updateEntities() {
-        for (Entity e : game.getEntities()) {
-            if (game.getPlayer().playerCanSee(e.getX(), e.getY()) || !fogOfWarEnabled) {
+        for (Entity e : gameLevel.getEntities()) {
+            if (gameLevel.getPlayer().playerCanSee(e.getX(), e.getY()) || !fogOfWarEnabled) {
                 StackPane pane = getPane(e.getX(), e.getY());
                 char glyph = e.getGlyph();
                 Color bgColor = Color.TRANSPARENT;

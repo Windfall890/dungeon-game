@@ -8,9 +8,11 @@ import static com.jsaop.dungeonGame.dungeon.Action.WAIT;
 
 public class Player extends Entity {
 
-    public static final int STARTING_PLAYER_HP = 15;
+    public static final int STARTING_PLAYER_HP = 50;
+    public static final int BASE_VISION_RANGE = 8;
+    public static final int MIN_VISION_RANGE = 4;
 
-    private int visionRange = 5;
+    private int visionRange = BASE_VISION_RANGE;
 
     public Player() {
         this(0, 0, BlockValues.PLAYER.getValue(), STARTING_PLAYER_HP);
@@ -29,7 +31,7 @@ public class Player extends Entity {
             move(action);
 
         if (action == WAIT)
-            out.println("player is waiting");
+            say("is waiting");
     }
 
     public int getVisionRange() {

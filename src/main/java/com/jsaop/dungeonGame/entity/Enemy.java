@@ -59,7 +59,7 @@ public class Enemy extends Entity {
         move(dy);
 
         if (canSeeTarget()) {
-            out.println("You have been spotted!");
+            say("has spotted its target.");
             state = CHASE;
         } else if (random.nextDouble() < .5) {
             state = WANDER;
@@ -72,7 +72,7 @@ public class Enemy extends Entity {
         moveRandomly();
 
         if (canSeeTarget()) {
-            out.println("You have been spotted!");
+            say("can sense your presence.");
             state = CHASE;
         } else if (random.nextDouble() < .5) {
             state = SEEK;
@@ -82,8 +82,9 @@ public class Enemy extends Entity {
     }
 
     private void attack() {
+        say("attacks!");
+
         targets.get(0).damage(power);
-        out.println(name + "Attacks!");
 
         if (targets.get(0).isDead()) {
             targets.remove(0);
@@ -107,7 +108,7 @@ public class Enemy extends Entity {
         if (isTouching(targets.get(0))) {
             state = ATTACK;
         } else if (!canSeeTarget()) {
-            out.println("The enemy has lost your trail.");
+            say("has lost your scent.");
             state = SEEK;
         }
     }
