@@ -67,7 +67,7 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        primaryStage.setTitle("Dungeon Level");
+        primaryStage.setTitle("Deep Dive");
 
         //grid
         grid = new GridPane();
@@ -86,7 +86,7 @@ public class App extends Application {
         turnText = new Text();
         hpText = new Text();
         radarText = new Text();
-        levelText = new Text("Level: " + currentLevel);
+        levelText = new Text("Depth: " + currentLevel);
         infoPane.getChildren().addAll(new HBox(turnText), new HBox(hpText), new HBox(radarText), new HBox(levelText));
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turnText.getScaleY());
 
@@ -216,9 +216,9 @@ public class App extends Application {
         this.currentLevel = newLevel;
         radarUse = 1;
         radarPings = 0;
-        levelText.setText("Level: " + currentLevel);
+        levelText.setText("Depth: " + currentLevel);
         consoleOut = new DialogConsole();
-        consoleOut.write(" --- Level: " + currentLevel + " ---");
+        consoleOut.write(" --- Depth: " + currentLevel + " ---");
 
         level = new Level(WIDTH, HEIGHT, currentLevel, consoleOut);
 
@@ -288,13 +288,17 @@ public class App extends Application {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("GAME OVER");
         alert.setHeaderText("You were zapped.");
-        alert.setContentText("You reached the " + currentLevel + " currentLevel.");
+        alert.setContentText("You reached Depth" + currentLevel + ".");
         timeline.pause();
         soundManager.gameOver.play();
+
+        alert.setOnCloseRequest(event -> {
+            timeline.play();
+            soundManager.ambiance.play();
+            resetGame();
+        });
         alert.show();
-        resetGame();
-        soundManager.ambiance.play();
-        timeline.play();
+//        timeline.play();
     }
 
     private void gameWin() {
@@ -303,10 +307,12 @@ public class App extends Application {
         alert.setTitle("Winner!");
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
-        alert.show();
+        alert.setOnCloseRequest(event -> {
+            resetGame();
+            timeline.play();
+        });
         soundManager.gameWin.play();
-        resetGame();
-        timeline.play();
+        alert.show();
     }
 
     private void updateGrid() {
