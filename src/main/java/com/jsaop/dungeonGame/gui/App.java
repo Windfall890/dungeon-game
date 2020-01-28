@@ -13,9 +13,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.layout.*;
-import javafx.scene.media.AudioClip;
-import javafx.scene.media.Media;
-import javafx.scene.media.MediaPlayer;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Text;
@@ -63,10 +60,7 @@ public class App extends Application {
     private Text levelText;
 
     //sounds
-    private MediaPlayer mediaPlayer;
-    private AudioClip doorClose;
-    private AudioClip yaySound;
-    private AudioClip ping;
+    private Sounds sounds;
 
     public static void main(String[] args) {
         launch(args);
@@ -123,9 +117,8 @@ public class App extends Application {
         scene.setOnKeyReleased(this::handleEvents);
 
         //start audio
-        initMediaPlayer();
-        mediaPlayer.play();
-        initSounds();
+        sounds = new Sounds();
+        sounds.ambiance.play();
 
         //show window and start level loop
         resetGame();
@@ -134,26 +127,6 @@ public class App extends Application {
         startAnimation();
     }
 
-    private void initMediaPlayer() {
-
-        String resource = loadResource("Ambient Cave-SoundBible.com-2124899044.wav");
-        Media sound = new Media(resource);
-        mediaPlayer = new MediaPlayer(sound);
-        mediaPlayer.setOnEndOfMedia(() -> {
-            mediaPlayer.seek(Duration.ZERO);
-            mediaPlayer.play();
-        });
-    }
-
-    private String loadResource(String file) {
-        return this.getClass().getResource("/" + file).toString();
-    }
-
-    private void initSounds() {
-        doorClose = new AudioClip(loadResource("Big_door_closed-Clemens_F-941522533.wav"));
-        yaySound = new AudioClip(loadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
-        ping = new AudioClip(loadResource("Sonar-SoundBible.com-354002976.wav"));
-    }
 
     private void handleEvents(KeyEvent event) {
 
@@ -201,7 +174,7 @@ public class App extends Application {
                     radarUse--;
                     flashCounter = 2;
                     radarPings = RADAR_PING_DURATION;
-                    ping.play();
+                    sounds.ping.play();
                     consoleOut.println("You ping your surroundings. " + radarPings + " turns remaining.");
                 }
                 if (radarUse <= 0) {
@@ -233,7 +206,7 @@ public class App extends Application {
     }
 
     private void nextLevel() {
-        doorClose.play();
+        sounds.doorClose.play();
         changeLevel(currentLevel + 1);
     }
 
@@ -335,7 +308,7 @@ public class App extends Application {
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
         alert.show();
-        yaySound.play();
+        sounds.yay.play();
         resetGame();
         timeline.play();
     }
