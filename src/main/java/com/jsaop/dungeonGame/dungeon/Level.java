@@ -2,8 +2,8 @@ package com.jsaop.dungeonGame.dungeon;
 
 import com.jsaop.dungeonGame.Util.Calculation;
 import com.jsaop.dungeonGame.entity.*;
+import com.jsaop.dungeonGame.gui.DialogConsole;
 
-import java.io.PrintStream;
 import java.util.List;
 import java.util.Random;
 
@@ -23,10 +23,10 @@ public class Level {
     private int level;
 
     public Level() {
-        this(100, 100, 1, System.out);
+        this(100, 100, 1, new SystemConsole());
     }
 
-    public Level(int width, int height, int level, PrintStream out) {
+    public Level(int width, int height, int level, Console out) {
         this.level = level;
 
         Random random = new Random();

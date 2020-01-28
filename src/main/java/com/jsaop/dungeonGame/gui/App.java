@@ -19,7 +19,6 @@ import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
-import java.io.*;
 import java.util.Random;
 
 import static com.jsaop.dungeonGame.dungeon.Action.*;
@@ -54,13 +53,12 @@ public class App extends Application {
     private Text radarText;
     private Timeline timeline;
     private TextArea console;
-    private PrintStream consoleOut;
-    private ByteArrayOutputStream baos;
     private int currentLevel = 1;
     private Text levelText;
 
-    //sounds
-    private Sounds sounds;
+    private DialogConsole consoleOut;
+
+    private SoundManager soundManager;
 
     public static void main(String[] args) {
         launch(args);
@@ -68,8 +66,6 @@ public class App extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
-        baos = new ByteArrayOutputStream();
-
 
         primaryStage.setTitle("Dungeon Level");
 
@@ -117,8 +113,8 @@ public class App extends Application {
         scene.setOnKeyReleased(this::handleEvents);
 
         //start audio
-        sounds = new Sounds();
-        sounds.ambiance.play();
+        soundManager = new SoundManager();
+        soundManager.ambiance.play();
 
         //show window and start level loop
         resetGame();
@@ -133,7 +129,7 @@ public class App extends Application {
         if (radarPings > 0) {
             radarPings--;
             if (radarPings <= 0) {
-                consoleOut.println("Your radar hums and shuts off");
+                consoleOut.write("Your radar hums and shuts off");
             }
         }
 
@@ -174,11 +170,11 @@ public class App extends Application {
                     radarUse--;
                     flashCounter = 2;
                     radarPings = RADAR_PING_DURATION;
-                    sounds.ping.play();
-                    consoleOut.println("You ping your surroundings. " + radarPings + " turns remaining.");
+                    soundManager.ping.play();
+                    consoleOut.write("You ping your surroundings. " + radarPings + " turns remaining.");
                 }
                 if (radarUse <= 0) {
-                    consoleOut.println("Your Radar goes dim as its power fades.");
+                    consoleOut.write("Your Radar goes dim as its power fades.");
                 }
                 level.takeTurn(WAIT);
                 break;
@@ -206,7 +202,7 @@ public class App extends Application {
     }
 
     private void nextLevel() {
-        sounds.doorClose.play();
+        soundManager.doorClose.play();
         changeLevel(currentLevel + 1);
     }
 
@@ -221,18 +217,18 @@ public class App extends Application {
         radarUse = 1;
         radarPings = 0;
         levelText.setText("Level: " + currentLevel);
-        consoleOut = new PrintStream(new BufferedOutputStream(baos));
-        consoleOut.println(" --- Level: " + currentLevel + " ---");
+        consoleOut = new DialogConsole();
+        consoleOut.write(" --- Level: " + currentLevel + " ---");
 
         level = new Level(WIDTH, HEIGHT, currentLevel, consoleOut);
 
-        consoleOut.println("You feel refreshed and have " + level.getPlayer().getHp() + " health");
+        consoleOut.write("You feel refreshed and have " + level.getPlayer().getHp() + " health");
 
         int numberEnemies = level.getNumberEnemies();
         if (numberEnemies == 1)
-            consoleOut.println("There is " + numberEnemies + " enemy");
+            consoleOut.write("There is " + numberEnemies + " enemy");
         else
-            consoleOut.println("There are " + numberEnemies + " enemies");
+            consoleOut.write("There are " + numberEnemies + " enemies");
     }
 
 
@@ -284,10 +280,7 @@ public class App extends Application {
     }
 
     private void updateConsole() {
-        consoleOut.flush();
-        String text = baos.toString();
-        console.appendText(text);
-        baos.reset();
+        console.appendText(consoleOut.readAndFlush());
     }
 
     private void gameLose() {
@@ -308,7 +301,7 @@ public class App extends Application {
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
         alert.show();
-        sounds.yay.play();
+        soundManager.yay.play();
         resetGame();
         timeline.play();
     }

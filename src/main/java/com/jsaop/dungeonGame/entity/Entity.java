@@ -2,6 +2,8 @@ package com.jsaop.dungeonGame.entity;
 
 import com.jsaop.dungeonGame.Util.Calculation;
 import com.jsaop.dungeonGame.dungeon.Action;
+import com.jsaop.dungeonGame.dungeon.Console;
+import com.jsaop.dungeonGame.dungeon.SystemConsole;
 
 import java.io.PrintStream;
 import java.util.Random;
@@ -11,7 +13,7 @@ import static com.jsaop.dungeonGame.dungeon.BlockValues.WALL;
 public abstract class Entity {
 
     private static final int DEFAULT_HP = 10;
-    public static PrintStream out = System.out;
+    public static Console out = new SystemConsole();
 
     protected static Random random = new Random();
 
@@ -25,7 +27,7 @@ public abstract class Entity {
 
 
     protected void say(String phrase) {
-        out.println(name + " " + phrase.trim());
+        out.write(name + " " + phrase.trim());
     }
 
     public int getX() {
@@ -61,7 +63,7 @@ public abstract class Entity {
     }
 
     public void damage(int d) {
-        out.println(name + " has taken " + d + " damage.");
+        out.write(name + " has taken " + d + " damage.");
         hp -= d;
     }
 

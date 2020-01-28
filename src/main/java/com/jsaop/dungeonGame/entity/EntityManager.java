@@ -1,6 +1,8 @@
 package com.jsaop.dungeonGame.entity;
 
-import java.io.PrintStream;
+import com.jsaop.dungeonGame.dungeon.Console;
+import com.jsaop.dungeonGame.gui.DialogConsole;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -14,7 +16,7 @@ public class EntityManager {
     private int IdCounter = 0;
     private List<Entity> entities;
 
-    public EntityManager(Random random, PrintStream printStream, char[][] masterMap, int level) {
+    public EntityManager(Random random, Console printStream, char[][] masterMap, int level) {
         Entity.out = printStream;
         Entity.random = random;
         this.masterMap = masterMap;

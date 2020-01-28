@@ -5,13 +5,13 @@ import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.util.Duration;
 
-public class Sounds {
+public class SoundManager {
     public MediaPlayer ambiance;
     public AudioClip doorClose;
     public AudioClip yay;
     public AudioClip ping;
 
-    public Sounds() {
+    public SoundManager() {
         initMediaPlayer();
         initSounds();
     }
