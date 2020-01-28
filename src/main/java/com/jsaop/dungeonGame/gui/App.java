@@ -42,11 +42,12 @@ public class App extends Application {
     public static final Color UNEXPLORED_COLOR = Color.BLACK;
     public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
     private static final int WIN_LEVEL = 15;
+    public static final int RADAR_PING_DURATION = 5;
 
 
     public static Random random = new Random();
     public boolean fogOfWarEnabled = true;
-    private int radarPings = 0;
+    private int radarPings = RADAR_PING_DURATION;
     private int radarUse;
     private int flashCounter = 0;
     private Game gameLevel;
@@ -100,7 +101,7 @@ public class App extends Application {
 
 
         //CONSOLE
-        console = new TextArea("Use the Arrow keys to move\nEscape to the stairs!\nGood Luck!\n");
+        console = new TextArea("Use the Arrow keys/WASD to move\n(R) for Radar Ping\nEscape to the stairs!\nGood Luck!\n");
         console.setStyle("-fx-control-inner-background:" + colorToHex(WALL_BG_COLOR) + "; " +
                 "-fx-font-family: Consolas; " +
                 "-fx-highlight-text-fill: #000000; " +
@@ -156,7 +157,9 @@ public class App extends Application {
 
         if (radarPings > 0) {
             radarPings--;
-            consoleOut.println(radarPings + " pings remaining.");
+            if (radarPings <= 0) {
+                consoleOut.println("Your radar hums and shuts off");
+            }
         }
 
         switch (event.getCode()) {
@@ -195,7 +198,7 @@ public class App extends Application {
                 if (radarUse > 0) {
                     radarUse--;
                     flashCounter = 2;
-                    radarPings = 3;
+                    radarPings = RADAR_PING_DURATION;
                     consoleOut.println("You ping your surroundings. " + radarPings + " turns remaining.");
                 }
                 consoleOut.println("Your Radar has no more charge.");
@@ -245,7 +248,7 @@ public class App extends Application {
 
         gameLevel = new Game(WIDTH, HEIGHT, level, consoleOut);
 
-        consoleOut.println("you feel refreshed and have " + gameLevel.getPlayer().getHp() + " health");
+        consoleOut.println("You feel refreshed and have " + gameLevel.getPlayer().getHp() + " health");
 
         int numberEnemies = gameLevel.getNumberEnemies();
         if (numberEnemies == 1)
