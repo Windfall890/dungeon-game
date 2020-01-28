@@ -284,13 +284,16 @@ public class App extends Application {
     }
 
     private void gameLose() {
+        soundManager.ambiance.pause();
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("GAME OVER");
         alert.setHeaderText("You were zapped.");
         alert.setContentText("You reached the " + currentLevel + " currentLevel.");
         timeline.pause();
+        soundManager.gameOver.play();
         alert.show();
         resetGame();
+        soundManager.ambiance.play();
         timeline.play();
     }
 
@@ -301,7 +304,7 @@ public class App extends Application {
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
         alert.show();
-        soundManager.yay.play();
+        soundManager.gameWin.play();
         resetGame();
         timeline.play();
     }

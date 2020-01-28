@@ -8,7 +8,8 @@ import javafx.util.Duration;
 public class SoundManager {
     public MediaPlayer ambiance;
     public AudioClip doorClose;
-    public AudioClip yay;
+    public AudioClip gameWin;
+    public AudioClip gameOver;
     public AudioClip ping;
 
     public SoundManager() {
@@ -19,8 +20,7 @@ public class SoundManager {
 
     private void initMediaPlayer() {
 
-        String resource = loadResource("Ambient Cave-SoundBible.com-2124899044.wav");
-        Media sound = new Media(resource);
+        Media sound = new Media(loadResource("Ambient Cave-SoundBible.com-2124899044.wav"));
         ambiance = new MediaPlayer(sound);
         ambiance.setOnEndOfMedia(() -> {
             ambiance.seek(Duration.ZERO);
@@ -28,13 +28,14 @@ public class SoundManager {
         });
     }
 
-    private String loadResource(String file) {
-        return this.getClass().getResource("/" + file).toString();
-    }
-
     private void initSounds() {
         doorClose = new AudioClip(loadResource("Big_door_closed-Clemens_F-941522533.wav"));
-        yay = new AudioClip(loadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
+        gameWin = new AudioClip(loadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
+        gameOver = new AudioClip(loadResource("Ambiance-SoundBible.com-1535680949.wav"));
         ping = new AudioClip(loadResource("Sonar-SoundBible.com-354002976.wav"));
+    }
+
+    private String loadResource(String file) {
+        return this.getClass().getResource("/" + file).toString();
     }
 }
