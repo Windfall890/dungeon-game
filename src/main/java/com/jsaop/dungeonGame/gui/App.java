@@ -8,7 +8,6 @@ import javafx.animation.Timeline;
 import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextArea;
 import javafx.scene.input.KeyEvent;
@@ -53,7 +52,6 @@ public class App extends Application {
     private ByteArrayOutputStream baos;
     private int level = 1;
     private Text levelText;
-    private Text enemyCounter;
 
     //sounds
     private MediaPlayer mediaPlayer;
@@ -87,7 +85,6 @@ public class App extends Application {
 
         turn = new Text();
         hp = new Text();
-        enemyCounter = new Text();
         levelText = new Text("Level: " + level);
         infoPane.getChildren().addAll(new HBox(turn), new HBox(hp), new HBox(levelText));
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turn.getScaleY());
@@ -112,7 +109,7 @@ public class App extends Application {
 
         //handle input
         Scene scene = new Scene(root);
-        scene.setOnKeyReleased(this::HandleEvents);
+        scene.setOnKeyReleased(this::handleEvents);
 
         //start audio
         initMediaPlayer();
@@ -128,7 +125,7 @@ public class App extends Application {
 
     private void initMediaPlayer() {
 
-        String resource = LoadResource("Ambient Cave-SoundBible.com-2124899044.wav");
+        String resource = loadResource("Ambient Cave-SoundBible.com-2124899044.wav");
         Media sound = new Media(resource);
         mediaPlayer = new MediaPlayer(sound);
         mediaPlayer.setOnEndOfMedia(() -> {
@@ -137,16 +134,17 @@ public class App extends Application {
         });
     }
 
-    private String LoadResource(String file) {
+    private String loadResource(String file) {
         return this.getClass().getResource("/" + file).toString();
     }
 
     private void initSounds() {
-        doorClose = new AudioClip(LoadResource("Big_door_closed-Clemens_F-941522533.wav"));
-        yaySound = new AudioClip(LoadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
+        doorClose = new AudioClip(loadResource("Big_door_closed-Clemens_F-941522533.wav"));
+        yaySound = new AudioClip(loadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
     }
 
-    private void HandleEvents(KeyEvent event) {
+    private void handleEvents(KeyEvent event) {
+        consoleOut.println("keyPress: " + event.getText());
         switch (event.getCode()) {
             case BACK_QUOTE:
                 handleDebugMode();
@@ -280,7 +278,7 @@ public class App extends Application {
     }
 
     private void gameLose() {
-        Alert alert = new Alert(AlertType.WARNING);
+        Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("GAME OVER");
         alert.setHeaderText("You were zapped.");
         alert.setContentText("You reached the " + level + " level.");
@@ -292,7 +290,7 @@ public class App extends Application {
 
     private void gameWin() {
         timeline.pause();
-        Alert alert = new Alert(AlertType.CONFIRMATION);
+        Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
         alert.setTitle("Winner!");
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
