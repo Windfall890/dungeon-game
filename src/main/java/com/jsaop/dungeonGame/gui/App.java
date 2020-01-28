@@ -1,6 +1,7 @@
 package com.jsaop.dungeonGame.gui;
 
 import com.jsaop.dungeonGame.dungeon.Game;
+import com.jsaop.dungeonGame.entity.Enemy;
 import com.jsaop.dungeonGame.entity.Entity;
 import com.jsaop.dungeonGame.entity.Player;
 import javafx.animation.KeyFrame;
@@ -22,6 +23,7 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 
 import java.io.*;
+import java.util.Random;
 
 import static com.jsaop.dungeonGame.dungeon.Action.*;
 import static com.jsaop.dungeonGame.dungeon.BlockValues.*;
@@ -41,11 +43,17 @@ public class App extends Application {
     public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
     private static final int WIN_LEVEL = 15;
 
+
+    public static Random random = new Random();
     public boolean fogOfWarEnabled = true;
+    private int radarPings = 0;
+    private int radarUse;
+    private int flashCounter = 0;
     private Game gameLevel;
     private GridPane grid;
-    private Text turn;
-    private Text hp;
+    private Text turnText;
+    private Text hpText;
+    private Text radarText;
     private Timeline timeline;
     private TextArea console;
     private PrintStream consoleOut;
@@ -83,11 +91,12 @@ public class App extends Application {
         FlowPane infoPane = new FlowPane();
         infoPane.setHgap(20);
 
-        turn = new Text();
-        hp = new Text();
+        turnText = new Text();
+        hpText = new Text();
+        radarText = new Text();
         levelText = new Text("Level: " + level);
-        infoPane.getChildren().addAll(new HBox(turn), new HBox(hp), new HBox(levelText));
-        infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turn.getScaleY());
+        infoPane.getChildren().addAll(new HBox(turnText), new HBox(hpText), new HBox(radarText), new HBox(levelText));
+        infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turnText.getScaleY());
 
 
         //CONSOLE
@@ -144,12 +153,17 @@ public class App extends Application {
     }
 
     private void handleEvents(KeyEvent event) {
-        consoleOut.println("keyPress: " + event.getText());
+
+        if (radarPings > 0) {
+            radarPings--;
+            consoleOut.println(radarPings + " pings remaining.");
+        }
+
         switch (event.getCode()) {
             case BACK_QUOTE:
                 handleDebugMode();
                 break;
-            case R:
+            case Q:
                 resetGame();
                 break;
             case CLOSE_BRACKET:
@@ -162,16 +176,30 @@ public class App extends Application {
                 gameLevel.takeTurn(WAIT);
                 break;
             case DOWN:
+            case S:
                 gameLevel.takeTurn(DOWN);
                 break;
             case UP:
+            case W:
                 gameLevel.takeTurn(UP);
                 break;
             case LEFT:
+            case A:
                 gameLevel.takeTurn(LEFT);
                 break;
             case RIGHT:
+            case D:
                 gameLevel.takeTurn(RIGHT);
+                break;
+            case R:
+                if (radarUse > 0) {
+                    radarUse--;
+                    flashCounter = 2;
+                    radarPings = 3;
+                    consoleOut.println("You ping your surroundings. " + radarPings + " turns remaining.");
+                }
+                consoleOut.println("Your Radar has no more charge.");
+                gameLevel.takeTurn(WAIT);
                 break;
         }
     }
@@ -209,6 +237,8 @@ public class App extends Application {
 
     private void changeLevel(int newLevel) {
         this.level = newLevel;
+        radarUse = 1;
+        radarPings = 0;
         levelText.setText("Level: " + level);
         consoleOut = new PrintStream(new BufferedOutputStream(baos));
         consoleOut.println(" --- Level: " + level + " ---");
@@ -255,8 +285,10 @@ public class App extends Application {
 
     private void updateAnimation() {
         updateGrid();
-        turn.setText("Turn: " + gameLevel.getTurn());
-        hp.setText("HP: " + gameLevel.getPlayer().getHp());
+        turnText.setText("Turn: " + gameLevel.getTurn());
+        hpText.setText("HP: " + gameLevel.getPlayer().getHp());
+        radarText.setText("(R)adar: " + radarUse);
+        if (radarPings > 0) radarText.setText(radarText.getText() + "Active for " + radarPings);
 
         updateConsole();
 
@@ -305,6 +337,8 @@ public class App extends Application {
             for (int x = 0; x < WIDTH; x++)
                 updateCell(x, y);
 
+
+        if (flashCounter > 0) flashCounter--;
         updateEntities();
     }
 
@@ -313,7 +347,13 @@ public class App extends Application {
         Color bgColor = UNEXPLORED_COLOR;
         Color fgColor = UNEXPLORED_COLOR;
         char glyph = gameLevel.getMap()[x][y];
-        if (fogOfWarEnabled && !gameLevel.isExplored(x, y)) {
+        if (flashCounter > 0) {
+            fgColor = Color.LIMEGREEN.desaturate();
+            bgColor = UNEXPLORED_COLOR;
+            glyph = randomGlyph();
+            setTile(pane, bgColor, fgColor, glyph);
+            return;
+        } else if (fogOfWarEnabled && !gameLevel.isExplored(x, y)) {
             bgColor = UNEXPLORED_COLOR;
         } else {
             if (glyph == WALL.getValue()) {
@@ -332,27 +372,41 @@ public class App extends Application {
         setTile(pane, bgColor, fgColor, glyph);
     }
 
+    private char[] noiseGlyphs = new char[]{'#', '%', '*', '>', '<'};
+
+    private char randomGlyph() {
+        return noiseGlyphs[random.nextInt(noiseGlyphs.length)];
+    }
+
     private void updateEntities() {
         for (Entity e : gameLevel.getEntities()) {
-            if (gameLevel.getPlayer().playerCanSee(e.getX(), e.getY()) || !fogOfWarEnabled) {
-                StackPane pane = getPane(e.getX(), e.getY());
-                char glyph = e.getGlyph();
-                Color bgColor = Color.TRANSPARENT;
-                Color fgColor = Color.TRANSPARENT;
-                if (glyph == PLAYER.getValue()) {
-                    bgColor = FLOOR_COLOR;
-                    fgColor = PLAYER_COLOR;
-                } else if (glyph == GOAL.getValue()) {
-                    bgColor = GOAL_COLOR;
-                    fgColor = Color.CORNFLOWERBLUE;
-                } else if (glyph == ENEMY.getValue()) {
-                    bgColor = ENEMY_COLOR;
-                    fgColor = Color.FIREBRICK.saturate();
-                }
-                setTile(pane, bgColor, fgColor, e.getGlyph());
+            if (gameLevel.getPlayer().playerCanSee(e.getX(), e.getY())) {
+                renderEntity(e);
+            } else if (!fogOfWarEnabled) {
+                renderEntity(e);
+            } else if (radarPings > 0 && e.getClass() == Enemy.class) {
+                renderEntity(e);
             }
 
         }
+    }
+
+    private void renderEntity(Entity e) {
+        StackPane pane = getPane(e.getX(), e.getY());
+        char glyph = e.getGlyph();
+        Color bgColor = Color.TRANSPARENT;
+        Color fgColor = Color.TRANSPARENT;
+        if (glyph == PLAYER.getValue()) {
+            bgColor = FLOOR_COLOR;
+            fgColor = PLAYER_COLOR;
+        } else if (glyph == GOAL.getValue()) {
+            bgColor = GOAL_COLOR;
+            fgColor = Color.CORNFLOWERBLUE;
+        } else if (glyph == ENEMY.getValue()) {
+            bgColor = ENEMY_COLOR;
+            fgColor = Color.FIREBRICK.saturate();
+        }
+        setTile(pane, bgColor, fgColor, e.getGlyph());
     }
 
     private StackPane getPane(int x, int y) {
