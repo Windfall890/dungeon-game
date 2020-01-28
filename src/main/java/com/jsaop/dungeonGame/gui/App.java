@@ -50,7 +50,7 @@ public class App extends Application {
     private int radarPings = RADAR_PING_DURATION;
     private int radarUse;
     private int flashCounter = 0;
-    private Level levelLevel;
+    private Level level;
     private GridPane grid;
     private Text turnText;
     private Text hpText;
@@ -59,7 +59,7 @@ public class App extends Application {
     private TextArea console;
     private PrintStream consoleOut;
     private ByteArrayOutputStream baos;
-    private int level = 1;
+    private int currentLevel = 1;
     private Text levelText;
 
     //sounds
@@ -96,7 +96,7 @@ public class App extends Application {
         turnText = new Text();
         hpText = new Text();
         radarText = new Text();
-        levelText = new Text("Level: " + level);
+        levelText = new Text("Level: " + currentLevel);
         infoPane.getChildren().addAll(new HBox(turnText), new HBox(hpText), new HBox(radarText), new HBox(levelText));
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turnText.getScaleY());
 
@@ -127,7 +127,7 @@ public class App extends Application {
         mediaPlayer.play();
         initSounds();
 
-        //show window and start levelLevel loop
+        //show window and start level loop
         resetGame();
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -178,23 +178,23 @@ public class App extends Application {
                 previousLevel();
                 break;
             case Z:
-                levelLevel.takeTurn(WAIT);
+                level.takeTurn(WAIT);
                 break;
             case DOWN:
             case S:
-                levelLevel.takeTurn(DOWN);
+                level.takeTurn(DOWN);
                 break;
             case UP:
             case W:
-                levelLevel.takeTurn(UP);
+                level.takeTurn(UP);
                 break;
             case LEFT:
             case A:
-                levelLevel.takeTurn(LEFT);
+                level.takeTurn(LEFT);
                 break;
             case RIGHT:
             case D:
-                levelLevel.takeTurn(RIGHT);
+                level.takeTurn(RIGHT);
                 break;
             case R:
                 if (radarUse > 0) {
@@ -207,7 +207,7 @@ public class App extends Application {
                 if (radarUse <= 0) {
                     consoleOut.println("Your Radar goes dim as its power fades.");
                 }
-                levelLevel.takeTurn(WAIT);
+                level.takeTurn(WAIT);
                 break;
         }
     }
@@ -234,28 +234,28 @@ public class App extends Application {
 
     private void nextLevel() {
         doorClose.play();
-        changeLevel(level + 1);
+        changeLevel(currentLevel + 1);
     }
 
 
     private void previousLevel() {
-        if (level > 1)
-            changeLevel(level - 1);
+        if (currentLevel > 1)
+            changeLevel(currentLevel - 1);
     }
 
     private void changeLevel(int newLevel) {
-        this.level = newLevel;
+        this.currentLevel = newLevel;
         radarUse = 1;
         radarPings = 0;
-        levelText.setText("Level: " + level);
+        levelText.setText("Level: " + currentLevel);
         consoleOut = new PrintStream(new BufferedOutputStream(baos));
-        consoleOut.println(" --- Level: " + level + " ---");
+        consoleOut.println(" --- Level: " + currentLevel + " ---");
 
-        levelLevel = new Level(WIDTH, HEIGHT, level, consoleOut);
+        level = new Level(WIDTH, HEIGHT, currentLevel, consoleOut);
 
-        consoleOut.println("You feel refreshed and have " + levelLevel.getPlayer().getHp() + " health");
+        consoleOut.println("You feel refreshed and have " + level.getPlayer().getHp() + " health");
 
-        int numberEnemies = levelLevel.getNumberEnemies();
+        int numberEnemies = level.getNumberEnemies();
         if (numberEnemies == 1)
             consoleOut.println("There is " + numberEnemies + " enemy");
         else
@@ -293,19 +293,19 @@ public class App extends Application {
 
     private void updateAnimation() {
         updateGrid();
-        turnText.setText("Turn: " + levelLevel.getTurn());
-        hpText.setText("HP: " + levelLevel.getPlayer().getHp());
+        turnText.setText("Turn: " + level.getTurn());
+        hpText.setText("HP: " + level.getPlayer().getHp());
         radarText.setText("(R)adar: " + radarUse);
         if (radarPings > 0) radarText.setText(radarText.getText() + "Active for " + radarPings);
 
         updateConsole();
 
-        if (level > WIN_LEVEL)
+        if (currentLevel > WIN_LEVEL)
             gameWin();
-        if (levelLevel.hasWon())
+        if (level.hasWon())
 
             nextLevel();
-        if (levelLevel.getPlayer().isDead())
+        if (level.getPlayer().isDead())
             gameLose();
 
     }
@@ -321,7 +321,7 @@ public class App extends Application {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("GAME OVER");
         alert.setHeaderText("You were zapped.");
-        alert.setContentText("You reached the " + level + " level.");
+        alert.setContentText("You reached the " + currentLevel + " currentLevel.");
         timeline.pause();
         alert.show();
         resetGame();
@@ -354,10 +354,10 @@ public class App extends Application {
         StackPane pane = getPane(x, y);
         Color bgColor = UNEXPLORED_COLOR;
         Color fgColor = UNEXPLORED_COLOR;
-        char glyph = levelLevel.getMap()[x][y];
+        char glyph = level.getMap()[x][y];
 
 
-        if (fogOfWarEnabled && !levelLevel.isExplored(x, y)) {
+        if (fogOfWarEnabled && !level.isExplored(x, y)) {
             setTile(pane, UNEXPLORED_COLOR, UNEXPLORED_COLOR, FLOOR.getValue());
             return;
         } else {
@@ -378,7 +378,7 @@ public class App extends Application {
             return;
         }
 
-        Player player = levelLevel.getPlayer();
+        Player player = level.getPlayer();
         if (!player.playerCanSee(x, y) && fogOfWarEnabled) {
             bgColor = bgColor.darker().darker();
         }
@@ -394,8 +394,8 @@ public class App extends Application {
     }
 
     private void updateEntities() {
-        for (Entity e : levelLevel.getEntities()) {
-            if (levelLevel.getPlayer().playerCanSee(e.getX(), e.getY())) {
+        for (Entity e : level.getEntities()) {
+            if (level.getPlayer().playerCanSee(e.getX(), e.getY())) {
                 renderEntity(e);
             } else if (!fogOfWarEnabled) {
                 renderEntity(e);
