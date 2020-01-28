@@ -1,6 +1,6 @@
 package com.jsaop.dungeonGame.gui;
 
-import com.jsaop.dungeonGame.dungeon.Game;
+import com.jsaop.dungeonGame.dungeon.Level;
 import com.jsaop.dungeonGame.entity.Enemy;
 import com.jsaop.dungeonGame.entity.Entity;
 import com.jsaop.dungeonGame.entity.Player;
@@ -50,7 +50,7 @@ public class App extends Application {
     private int radarPings = RADAR_PING_DURATION;
     private int radarUse;
     private int flashCounter = 0;
-    private Game gameLevel;
+    private Level levelLevel;
     private GridPane grid;
     private Text turnText;
     private Text hpText;
@@ -66,6 +66,7 @@ public class App extends Application {
     private MediaPlayer mediaPlayer;
     private AudioClip doorClose;
     private AudioClip yaySound;
+    private AudioClip ping;
 
     public static void main(String[] args) {
         launch(args);
@@ -76,7 +77,7 @@ public class App extends Application {
         baos = new ByteArrayOutputStream();
 
 
-        primaryStage.setTitle("Dungeon Game");
+        primaryStage.setTitle("Dungeon Level");
 
         //grid
         grid = new GridPane();
@@ -126,7 +127,7 @@ public class App extends Application {
         mediaPlayer.play();
         initSounds();
 
-        //show window and start gameLevel loop
+        //show window and start levelLevel loop
         resetGame();
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -151,6 +152,7 @@ public class App extends Application {
     private void initSounds() {
         doorClose = new AudioClip(loadResource("Big_door_closed-Clemens_F-941522533.wav"));
         yaySound = new AudioClip(loadResource("1_person_cheering-Jett_Rifkin-1851518140.wav"));
+        ping = new AudioClip(loadResource("Sonar-SoundBible.com-354002976.wav"));
     }
 
     private void handleEvents(KeyEvent event) {
@@ -176,33 +178,36 @@ public class App extends Application {
                 previousLevel();
                 break;
             case Z:
-                gameLevel.takeTurn(WAIT);
+                levelLevel.takeTurn(WAIT);
                 break;
             case DOWN:
             case S:
-                gameLevel.takeTurn(DOWN);
+                levelLevel.takeTurn(DOWN);
                 break;
             case UP:
             case W:
-                gameLevel.takeTurn(UP);
+                levelLevel.takeTurn(UP);
                 break;
             case LEFT:
             case A:
-                gameLevel.takeTurn(LEFT);
+                levelLevel.takeTurn(LEFT);
                 break;
             case RIGHT:
             case D:
-                gameLevel.takeTurn(RIGHT);
+                levelLevel.takeTurn(RIGHT);
                 break;
             case R:
                 if (radarUse > 0) {
                     radarUse--;
                     flashCounter = 2;
                     radarPings = RADAR_PING_DURATION;
+                    ping.play();
                     consoleOut.println("You ping your surroundings. " + radarPings + " turns remaining.");
                 }
-                consoleOut.println("Your Radar has no more charge.");
-                gameLevel.takeTurn(WAIT);
+                if (radarUse <= 0) {
+                    consoleOut.println("Your Radar goes dim as its power fades.");
+                }
+                levelLevel.takeTurn(WAIT);
                 break;
         }
     }
@@ -246,11 +251,11 @@ public class App extends Application {
         consoleOut = new PrintStream(new BufferedOutputStream(baos));
         consoleOut.println(" --- Level: " + level + " ---");
 
-        gameLevel = new Game(WIDTH, HEIGHT, level, consoleOut);
+        levelLevel = new Level(WIDTH, HEIGHT, level, consoleOut);
 
-        consoleOut.println("You feel refreshed and have " + gameLevel.getPlayer().getHp() + " health");
+        consoleOut.println("You feel refreshed and have " + levelLevel.getPlayer().getHp() + " health");
 
-        int numberEnemies = gameLevel.getNumberEnemies();
+        int numberEnemies = levelLevel.getNumberEnemies();
         if (numberEnemies == 1)
             consoleOut.println("There is " + numberEnemies + " enemy");
         else
@@ -288,8 +293,8 @@ public class App extends Application {
 
     private void updateAnimation() {
         updateGrid();
-        turnText.setText("Turn: " + gameLevel.getTurn());
-        hpText.setText("HP: " + gameLevel.getPlayer().getHp());
+        turnText.setText("Turn: " + levelLevel.getTurn());
+        hpText.setText("HP: " + levelLevel.getPlayer().getHp());
         radarText.setText("(R)adar: " + radarUse);
         if (radarPings > 0) radarText.setText(radarText.getText() + "Active for " + radarPings);
 
@@ -297,10 +302,10 @@ public class App extends Application {
 
         if (level > WIN_LEVEL)
             gameWin();
-        if (gameLevel.hasWon())
+        if (levelLevel.hasWon())
 
             nextLevel();
-        if (gameLevel.getPlayer().isDead())
+        if (levelLevel.getPlayer().isDead())
             gameLose();
 
     }
@@ -349,15 +354,12 @@ public class App extends Application {
         StackPane pane = getPane(x, y);
         Color bgColor = UNEXPLORED_COLOR;
         Color fgColor = UNEXPLORED_COLOR;
-        char glyph = gameLevel.getMap()[x][y];
-        if (flashCounter > 0) {
-            fgColor = Color.LIMEGREEN.desaturate();
-            bgColor = UNEXPLORED_COLOR;
-            glyph = randomGlyph();
-            setTile(pane, bgColor, fgColor, glyph);
+        char glyph = levelLevel.getMap()[x][y];
+
+
+        if (fogOfWarEnabled && !levelLevel.isExplored(x, y)) {
+            setTile(pane, UNEXPLORED_COLOR, UNEXPLORED_COLOR, FLOOR.getValue());
             return;
-        } else if (fogOfWarEnabled && !gameLevel.isExplored(x, y)) {
-            bgColor = UNEXPLORED_COLOR;
         } else {
             if (glyph == WALL.getValue()) {
                 bgColor = WALL_BG_COLOR;
@@ -368,11 +370,21 @@ public class App extends Application {
             }
         }
 
-        Player player = gameLevel.getPlayer();
+        if (flashCounter > 0) {
+            fgColor = Color.LIMEGREEN.desaturate();
+            bgColor = UNEXPLORED_COLOR;
+            glyph = randomGlyph();
+            setTile(pane, bgColor, fgColor, glyph);
+            return;
+        }
+
+        Player player = levelLevel.getPlayer();
         if (!player.playerCanSee(x, y) && fogOfWarEnabled) {
             bgColor = bgColor.darker().darker();
         }
         setTile(pane, bgColor, fgColor, glyph);
+
+
     }
 
     private char[] noiseGlyphs = new char[]{'#', '%', '*', '>', '<'};
@@ -382,8 +394,8 @@ public class App extends Application {
     }
 
     private void updateEntities() {
-        for (Entity e : gameLevel.getEntities()) {
-            if (gameLevel.getPlayer().playerCanSee(e.getX(), e.getY())) {
+        for (Entity e : levelLevel.getEntities()) {
+            if (levelLevel.getPlayer().playerCanSee(e.getX(), e.getY())) {
                 renderEntity(e);
             } else if (!fogOfWarEnabled) {
                 renderEntity(e);

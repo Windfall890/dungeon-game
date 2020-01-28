@@ -10,7 +10,7 @@ import java.util.Random;
 import static java.util.stream.Collectors.*;
 
 
-public class Game {
+public class Level {
     private Player player;
     private Goal goal;
     private final List<Entity> npcs;
@@ -22,11 +22,11 @@ public class Game {
     private EntityManager ems;
     private int level;
 
-    public Game() {
+    public Level() {
         this(100, 100, 1, System.out);
     }
 
-    public Game(int width, int height, int level, PrintStream out) {
+    public Level(int width, int height, int level, PrintStream out) {
         this.level = level;
 
         Random random = new Random();
