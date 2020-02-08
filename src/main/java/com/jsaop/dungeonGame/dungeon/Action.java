@@ -5,7 +5,8 @@ public enum Action {
     UP("UP"),
     LEFT("LEFT"),
     RIGHT("RIGHT"),
-    WAIT("WAIT");
+    WAIT("WAIT"),
+    PING("PING");
 
     private final String value;
 

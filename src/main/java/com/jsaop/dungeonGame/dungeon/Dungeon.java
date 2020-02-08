@@ -2,10 +2,7 @@ package com.jsaop.dungeonGame.dungeon;
 
 import com.jsaop.dungeonGame.Util.Calculation;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 
 public class Dungeon {
 
@@ -137,19 +134,31 @@ public class Dungeon {
             }
         }
 
-        map[room.getCenterX()][room.getCenterY()] = '+';
+//        map[room.getCenterX()][room.getCenterY()] = '+';
     }
 
     private void generateTunnels() {
 
+        List<Tunnel> tunnels = new ArrayList<>();
         for (Room roomA : rooms) {
-            for (Room roomB : rooms) {
-                if (roomA != roomB) {
-                    tunnel(roomA.getCenterX(), roomA.getCenterY(),
-                            roomB.getCenterX(), roomB.getCenterY());
+            Set<Room> proposedRooms = new HashSet<>();
+            while (proposedRooms.size() < 2) {
+                Room proposed = rooms.get(random.nextInt(rooms.size()));
+                if (roomA != proposed) {
+                    proposedRooms.add(proposed);
                 }
             }
+            for (Room roomB : proposedRooms) {
+                Tunnel link = new Tunnel(roomA, roomB);
+                if (tunnels.stream().noneMatch(t -> t.equals(link))) {
+                    tunnel(roomA.getCenterX() + random.nextInt(roomA.getWidth()) - roomA.getWidth() / 2,
+                            roomA.getCenterY() + random.nextInt(roomA.getHeight()) - roomA.getHeight() / 2,
+                            roomB.getCenterX() + random.nextInt(roomB.getWidth()) - roomB.getWidth() / 2,
+                            roomB.getCenterY() + random.nextInt(roomB.getHeight()) - roomB.getHeight() / 2);
 
+                    tunnels.add(link);
+                }
+            }
         }
 
     }
@@ -190,7 +199,6 @@ public class Dungeon {
                 .min(Comparator.comparingDouble(room -> Calculation.SquareDistance(room.getX(), room.getY(), x, y)))
                 .orElseThrow(RuntimeException::new);
     }
-
 
 
     public List<Room> GetRooms() {

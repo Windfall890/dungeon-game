@@ -1,6 +1,6 @@
 package com.jsaop.dungeonGame.gui;
 
-import com.jsaop.dungeonGame.dungeon.Level;
+import com.jsaop.dungeonGame.dungeon.Game;
 import com.jsaop.dungeonGame.entity.Enemy;
 import com.jsaop.dungeonGame.entity.Entity;
 import com.jsaop.dungeonGame.entity.Player;
@@ -26,8 +26,8 @@ import static com.jsaop.dungeonGame.dungeon.BlockValues.*;
 
 
 public class App extends Application {
-    public static final int WIDTH = 60;
-    public static final int HEIGHT = 31;
+    public static final int WIDTH = 90;
+    public static final int HEIGHT = 41;
     public static final int CELL_DIMENSION = 14;
     public static final long DEFAULT_FRAME_DELAY = 100;
 
@@ -37,27 +37,29 @@ public class App extends Application {
     public static final Color ENEMY_COLOR = Color.LIMEGREEN;
     public static final Color UNEXPLORED_COLOR = Color.BLACK;
     public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
+
     private static final int WIN_LEVEL = 15;
     public static final int RADAR_PING_DURATION = 5;
 
 
     public static Random random = new Random();
     public boolean fogOfWarEnabled = true;
-    private int radarPings = RADAR_PING_DURATION;
-    private int radarUse;
+    //    private int radarPings = RADAR_PING_DURATION;
+//    private int radarUse;
     private int flashCounter = 0;
-    private Level level;
+    //    private Level level;
+//    private int currentLevel = 1;
+    private Game game;
+
     private GridPane grid;
     private Text turnText;
     private Text hpText;
     private Text radarText;
     private Timeline timeline;
     private TextArea console;
-    private int currentLevel = 1;
     private Text levelText;
 
     private DialogConsole consoleOut;
-
     private SoundManager soundManager;
 
     public static void main(String[] args) {
@@ -67,6 +69,11 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
+        soundManager = new SoundManager();
+        consoleOut = new DialogConsole();
+        game = new Game(WIDTH, HEIGHT, 0, consoleOut, soundManager);
+
+        //show window and start level loop
         primaryStage.setTitle("Deep Dive");
 
         //grid
@@ -86,15 +93,13 @@ public class App extends Application {
         turnText = new Text();
         hpText = new Text();
         radarText = new Text();
-        levelText = new Text("Depth: " + currentLevel);
+        levelText = new Text("Depth: " + game.getCurrentDepth());
         infoPane.getChildren().addAll(new HBox(turnText), new HBox(hpText), new HBox(radarText), new HBox(levelText));
         infoPane.setPrefSize((CELL_DIMENSION * WIDTH) + WIDTH, turnText.getScaleY());
-
 
         //CONSOLE
         console = new TextArea("Use the Arrow keys/WASD to move\n(R) for Radar Ping\nEscape to the stairs!\nGood Luck!\n");
         console.setStyle("-fx-control-inner-background:" + colorToHex(WALL_BG_COLOR) + "; " +
-                "-fx-font-family: Consolas; " +
                 "-fx-highlight-text-fill: #000000; " +
                 "-fx-text-fill: " + colorToHex(PLAYER_COLOR) + ";" +
                 "-fx-padding: 0 0 50 0");
@@ -113,11 +118,8 @@ public class App extends Application {
         scene.setOnKeyReleased(this::handleEvents);
 
         //start audio
-        soundManager = new SoundManager();
         soundManager.ambiance.play();
 
-        //show window and start level loop
-        resetGame();
         primaryStage.setScene(scene);
         primaryStage.show();
         startAnimation();
@@ -126,57 +128,44 @@ public class App extends Application {
 
     private void handleEvents(KeyEvent event) {
 
-        if (radarPings > 0) {
-            radarPings--;
-            if (radarPings <= 0) {
-                consoleOut.write("Your radar hums and shuts off");
-            }
-        }
-
         switch (event.getCode()) {
+            //debug and ui
             case BACK_QUOTE:
                 handleDebugMode();
                 break;
             case Q:
-                resetGame();
+                game.reset();
                 break;
             case CLOSE_BRACKET:
-                nextLevel();
+                game.nextLevel();
                 break;
             case OPEN_BRACKET:
-                previousLevel();
+                game.previousLevel();
                 break;
+            //game actions
             case Z:
-                level.takeTurn(WAIT);
+                game.takeTurn(WAIT);
                 break;
             case DOWN:
             case S:
-                level.takeTurn(DOWN);
+                game.takeTurn(DOWN);
                 break;
             case UP:
             case W:
-                level.takeTurn(UP);
+                game.takeTurn(UP);
                 break;
             case LEFT:
             case A:
-                level.takeTurn(LEFT);
+                game.takeTurn(LEFT);
                 break;
             case RIGHT:
             case D:
-                level.takeTurn(RIGHT);
+                game.takeTurn(RIGHT);
                 break;
             case R:
-                if (radarUse > 0) {
-                    radarUse--;
+                if(game.getPings()>0)
                     flashCounter = 2;
-                    radarPings = RADAR_PING_DURATION;
-                    soundManager.ping.play();
-                    consoleOut.write("You ping your surroundings. " + radarPings + " turns remaining.");
-                }
-                if (radarUse <= 0) {
-                    consoleOut.write("Your Radar goes dim as its power fades.");
-                }
-                level.takeTurn(WAIT);
+                game.takeTurn(PING);
                 break;
         }
     }
@@ -197,39 +186,6 @@ public class App extends Application {
         l.setTextFill(fg);
     }
 
-    private void resetGame() {
-        changeLevel(1);
-    }
-
-    private void nextLevel() {
-        soundManager.doorClose.play();
-        changeLevel(currentLevel + 1);
-    }
-
-
-    private void previousLevel() {
-        if (currentLevel > 1)
-            changeLevel(currentLevel - 1);
-    }
-
-    private void changeLevel(int newLevel) {
-        this.currentLevel = newLevel;
-        radarUse = 1;
-        radarPings = 0;
-        levelText.setText("Depth: " + currentLevel);
-        consoleOut = new DialogConsole();
-        consoleOut.write(" --- Depth: " + currentLevel + " ---");
-
-        level = new Level(WIDTH, HEIGHT, currentLevel, consoleOut);
-
-        consoleOut.write("You feel refreshed and have " + level.getPlayer().getHp() + " health");
-
-        int numberEnemies = level.getNumberEnemies();
-        if (numberEnemies == 1)
-            consoleOut.write("There is " + numberEnemies + " enemy");
-        else
-            consoleOut.write("There are " + numberEnemies + " enemies");
-    }
 
 
     private void handleDebugMode() {
@@ -262,19 +218,15 @@ public class App extends Application {
 
     private void updateAnimation() {
         updateGrid();
-        turnText.setText("Turn: " + level.getTurn());
-        hpText.setText("HP: " + level.getPlayer().getHp());
-        radarText.setText("(R)adar: " + radarUse);
-        if (radarPings > 0) radarText.setText(radarText.getText() + "Active for " + radarPings);
-
+        turnText.setText("Turn: " + game.getTurn());
+        hpText.setText("HP: " + game.getPlayer().getHp());
+        radarText.setText("(R)adar: " + game.getPings());
+        levelText.setText("Depth: " + game.getCurrentDepth());
         updateConsole();
 
-        if (currentLevel > WIN_LEVEL)
+        if (game.hasWon())
             gameWin();
-        if (level.hasWon())
-
-            nextLevel();
-        if (level.getPlayer().isDead())
+        if (game.getPlayer().isDead())
             gameLose();
 
     }
@@ -288,14 +240,14 @@ public class App extends Application {
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("GAME OVER");
         alert.setHeaderText("You were zapped.");
-        alert.setContentText("You reached Depth" + currentLevel + ".");
+        alert.setContentText("You reached Depth" + game.getCurrentDepth() + ".");
         timeline.pause();
         soundManager.gameOver.play();
 
         alert.setOnCloseRequest(event -> {
             timeline.play();
             soundManager.ambiance.play();
-            resetGame();
+            game.reset();
         });
         alert.show();
 //        timeline.play();
@@ -308,7 +260,7 @@ public class App extends Application {
         alert.setHeaderText("WOW YOU WIN!");
         alert.setContentText("I have a great message for you: You have won!");
         alert.setOnCloseRequest(event -> {
-            resetGame();
+            game.reset();
             timeline.play();
         });
         soundManager.gameWin.play();
@@ -329,10 +281,10 @@ public class App extends Application {
         StackPane pane = getPane(x, y);
         Color bgColor = UNEXPLORED_COLOR;
         Color fgColor = UNEXPLORED_COLOR;
-        char glyph = level.getMap()[x][y];
+        char glyph = game.getLevel().getMap()[x][y];
 
 
-        if (fogOfWarEnabled && !level.isExplored(x, y)) {
+        if (fogOfWarEnabled && !game.getLevel().isExplored(x, y)) {
             setTile(pane, UNEXPLORED_COLOR, UNEXPLORED_COLOR, FLOOR.getValue());
             return;
         } else {
@@ -353,7 +305,7 @@ public class App extends Application {
             return;
         }
 
-        Player player = level.getPlayer();
+        Player player = game.getPlayer();
         if (!player.playerCanSee(x, y) && fogOfWarEnabled) {
             bgColor = bgColor.darker().darker();
         }
@@ -369,12 +321,12 @@ public class App extends Application {
     }
 
     private void updateEntities() {
-        for (Entity e : level.getEntities()) {
-            if (level.getPlayer().playerCanSee(e.getX(), e.getY())) {
+        for (Entity e : game.getEntities()) {
+            if (game.getPlayer().playerCanSee(e.getX(), e.getY())) {
                 renderEntity(e);
             } else if (!fogOfWarEnabled) {
                 renderEntity(e);
-            } else if (radarPings > 0 && e.getClass() == Enemy.class) {
+            } else if (game.getPingTicks() > 0 && e.getClass() == Enemy.class) {
                 renderEntity(e);
             }
 
