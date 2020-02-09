@@ -38,17 +38,9 @@ public class App extends Application {
     public static final Color UNEXPLORED_COLOR = Color.BLACK;
     public static final Color WALL_BG_COLOR = Color.DARKSLATEGRAY;
 
-    private static final int WIN_LEVEL = 15;
-    public static final int RADAR_PING_DURATION = 5;
-
-
     public static Random random = new Random();
     public boolean fogOfWarEnabled = true;
-    //    private int radarPings = RADAR_PING_DURATION;
-//    private int radarUse;
     private int flashCounter = 0;
-    //    private Level level;
-//    private int currentLevel = 1;
     private Game game;
 
     private GridPane grid;
@@ -60,7 +52,7 @@ public class App extends Application {
     private Text levelText;
 
     private DialogConsole consoleOut;
-    private SoundManager soundManager;
+    private JavaFxSoundManager javaFxSoundManager;
 
     public static void main(String[] args) {
         launch(args);
@@ -69,9 +61,9 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) throws Exception {
 
-        soundManager = new SoundManager();
+        javaFxSoundManager = new JavaFxSoundManager();
         consoleOut = new DialogConsole();
-        game = new Game(WIDTH, HEIGHT, 0, consoleOut, soundManager);
+        game = new Game(WIDTH, HEIGHT, 0, consoleOut, javaFxSoundManager);
 
         //show window and start level loop
         primaryStage.setTitle("Deep Dive");
@@ -118,7 +110,7 @@ public class App extends Application {
         scene.setOnKeyReleased(this::handleEvents);
 
         //start audio
-        soundManager.ambiance.play();
+        javaFxSoundManager.playAmbiance();
 
         primaryStage.setScene(scene);
         primaryStage.show();
@@ -142,6 +134,9 @@ public class App extends Application {
             case OPEN_BRACKET:
                 game.previousLevel();
                 break;
+            case BACK_SLASH:
+                javaFxSoundManager.playerSpotted();
+                break;
             //game actions
             case Z:
                 game.takeTurn(WAIT);
@@ -163,7 +158,7 @@ public class App extends Application {
                 game.takeTurn(RIGHT);
                 break;
             case R:
-                if(game.getPings()>0)
+                if (game.getPings() > 0)
                     flashCounter = 2;
                 game.takeTurn(PING);
                 break;
@@ -185,7 +180,6 @@ public class App extends Application {
         l.setText(c + "");
         l.setTextFill(fg);
     }
-
 
 
     private void handleDebugMode() {
@@ -236,17 +230,17 @@ public class App extends Application {
     }
 
     private void gameLose() {
-        soundManager.ambiance.pause();
+        javaFxSoundManager.pauseAmbiance();
         Alert alert = new Alert(Alert.AlertType.WARNING);
         alert.setTitle("GAME OVER");
         alert.setHeaderText("You were zapped.");
         alert.setContentText("You reached Depth" + game.getCurrentDepth() + ".");
         timeline.pause();
-        soundManager.gameOver.play();
+        javaFxSoundManager.gameOver();
 
         alert.setOnCloseRequest(event -> {
             timeline.play();
-            soundManager.ambiance.play();
+            javaFxSoundManager.playAmbiance();
             game.reset();
         });
         alert.show();
@@ -263,7 +257,7 @@ public class App extends Application {
             game.reset();
             timeline.play();
         });
-        soundManager.gameWin.play();
+        javaFxSoundManager.gameWin();
         alert.show();
     }
 

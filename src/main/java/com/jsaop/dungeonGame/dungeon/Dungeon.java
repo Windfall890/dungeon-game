@@ -67,13 +67,6 @@ public class Dungeon {
         return height;
     }
 
-    public Room getRoom(int id) {
-        return rooms.stream()
-                .filter(room -> room.id == id)
-                .findFirst()
-                .orElseThrow(RuntimeException::new);
-    }
-
     private void generate() {
         generateRooms(NUM_ROOMS);
         placeRooms();
@@ -110,6 +103,10 @@ public class Dungeon {
             }
         }
 
+        //sometimes spawn 8 rooms
+        if(random.nextDouble() < 0.3){
+            rooms.remove(random.nextInt(rooms.size()));
+        }
         for (Room r : rooms) {
             stampRoom(r);
 
@@ -192,6 +189,13 @@ public class Dungeon {
 
     public char[][] getMap() {
         return map;
+    }
+
+    public Room getRoom(int id) {
+        return rooms.stream()
+                .filter(room -> room.id == id)
+                .findFirst()
+                .orElseThrow(RuntimeException::new);
     }
 
     public Room GetRoomNearest(int x, int y) {

@@ -2,6 +2,7 @@ package com.jsaop.dungeonGame.entity;
 
 import com.jsaop.dungeonGame.dungeon.Console;
 import com.jsaop.dungeonGame.gui.DialogConsole;
+import com.jsaop.dungeonGame.gui.ISoundManager;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,9 +17,10 @@ public class EntityManager {
     private int IdCounter = 0;
     private List<Entity> entities;
 
-    public EntityManager(Random random, Console printStream, char[][] masterMap, int level) {
+    public EntityManager(Random random, Console printStream, ISoundManager soundManager, char[][] masterMap, int level) {
         Entity.out = printStream;
         Entity.random = random;
+        Entity.soundManager = soundManager;
         this.masterMap = masterMap;
 
         this.entities = new ArrayList<>();
@@ -41,7 +43,7 @@ public class EntityManager {
 
         if (level > 6) {
 
-            int range = Player.BASE_VISION_RANGE + 8 - level;
+            int range = Player.BASE_VISION_RANGE + 9 - level;
 
             if (range < Player.MIN_VISION_RANGE)
                 return Player.MIN_VISION_RANGE;
@@ -53,11 +55,11 @@ public class EntityManager {
 
     private void spawnEnemies(int level) {
 
+        if (level > 0) addEnemy();
         if (level > 1) addEnemy();
-        if (level > 2) addEnemy();
-        if (level > 4) addEnemy();
-        if (level > 6) addEnemy();
-        if (level > 8) addEnemy();
+        if (level > 3) addEnemy();
+        if (level > 5) addEnemy();
+        if (level > 7) addEnemy();
     }
 
     private void add(Entity e) {

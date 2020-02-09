@@ -27,11 +27,13 @@ public class Player extends Entity {
     }
 
     public void execute(Action action) {
-        if (action.isMoveAction())
+        if (action.isMoveAction()) {
             move(action);
+        }
 
-        if (action == WAIT)
+        if (action == WAIT) {
             say("is waiting");
+        }
     }
 
     public int getVisionRange() {

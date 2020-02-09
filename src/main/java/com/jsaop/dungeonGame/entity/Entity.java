@@ -4,8 +4,10 @@ import com.jsaop.dungeonGame.Util.Calculation;
 import com.jsaop.dungeonGame.dungeon.Action;
 import com.jsaop.dungeonGame.dungeon.Console;
 import com.jsaop.dungeonGame.dungeon.SystemConsole;
+import com.jsaop.dungeonGame.gui.ISoundManager;
+import com.jsaop.dungeonGame.gui.JavaFxSoundManager;
 
-import java.io.PrintStream;
+import javax.sound.midi.Soundbank;
 import java.util.Random;
 
 import static com.jsaop.dungeonGame.dungeon.BlockValues.WALL;
@@ -14,6 +16,7 @@ public abstract class Entity {
 
     private static final int DEFAULT_HP = 10;
     public static Console out = new SystemConsole();
+    public static ISoundManager soundManager = new NoSoundManager();
 
     protected static Random random = new Random();
 

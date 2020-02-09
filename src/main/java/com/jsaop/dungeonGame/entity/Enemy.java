@@ -60,6 +60,7 @@ public class Enemy extends Entity {
 
         if (canSeeTarget()) {
             say("has spotted its target.");
+            soundManager.playerSpotted();
             state = CHASE;
         } else if (random.nextDouble() < .5) {
             state = WANDER;
@@ -73,6 +74,7 @@ public class Enemy extends Entity {
 
         if (canSeeTarget()) {
             say("can sense your presence.");
+            soundManager.playerSpotted();
             state = CHASE;
         } else if (random.nextDouble() < .5) {
             state = SEEK;
@@ -83,7 +85,7 @@ public class Enemy extends Entity {
 
     private void attack() {
         say("attacks!");
-
+        soundManager.attack();
         targets.get(0).damage(power);
 
         if (targets.get(0).isDead()) {

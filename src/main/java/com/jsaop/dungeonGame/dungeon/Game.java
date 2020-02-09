@@ -2,11 +2,9 @@ package com.jsaop.dungeonGame.dungeon;
 
 import com.jsaop.dungeonGame.entity.Entity;
 import com.jsaop.dungeonGame.entity.Player;
-import com.jsaop.dungeonGame.gui.App;
-import com.jsaop.dungeonGame.gui.SoundManager;
+import com.jsaop.dungeonGame.gui.ISoundManager;
 
 import java.util.List;
-import java.util.Random;
 
 import static com.jsaop.dungeonGame.dungeon.Action.WAIT;
 
@@ -20,17 +18,17 @@ public class Game {
     private int height;
     private int currentLevel;
     private Console console;
-    private SoundManager soundManager;
+    private ISoundManager soundManager;
     private Level level;
 
 
-    public Game(int width, int height, int startingLevel, Console console, SoundManager soundManager) {
+    public Game(int width, int height, int startingLevel, Console console, ISoundManager soundManager) {
         this.width = width;
         this.height = height;
         currentLevel = startingLevel;
         this.console = console;
         this.soundManager = soundManager;
-        level = new Level(width, height, startingLevel, console);
+        level = new Level(width, height, startingLevel, console, soundManager);
     }
 
     public int getCurrentDepth() {
@@ -43,7 +41,9 @@ public class Game {
         radarPings = 0;
         console.write(" --- Depth: " + currentLevel + " ---");
 
-        level = new Level(width, height, currentLevel, console);
+        level = new Level(width, height, currentLevel, console, soundManager);
+
+        soundManager.levelTransition();
 
         console.write("You feel refreshed and have " + level.getPlayer().getHp() + " health");
 
@@ -75,7 +75,7 @@ public class Game {
                 if (radarUses > 0) {
                     radarUses--;
                     radarPings = RADAR_PING_DURATION;
-                    soundManager.ping.play();
+                    soundManager.radarPing();
                     console.write("You ping your surroundings. " + radarPings + " turns remaining.");
                 }
                 if (radarUses <= 0) {
@@ -85,8 +85,10 @@ public class Game {
                 break;
         }
 
-        if (level.hasWon())
-            changeLevel(currentLevel++);
+        if (level.hasWon()) {
+            soundManager.levelTransition();
+            changeLevel(++currentLevel);
+        }
     }
 
     public int getTurn() {
@@ -118,18 +120,17 @@ public class Game {
     }
 
     public void nextLevel() {
-        soundManager.doorClose.play();
         changeLevel(getCurrentDepth() + 1);
     }
 
     public void previousLevel() {
-        if (currentLevel > 1)
-            changeLevel(currentLevel - 1);
+        if (currentLevel >= 1)
+            changeLevel(--currentLevel);
     }
 
     public void reset() {
         currentLevel = 0;
-        level = new Level(width, height, 0, console);
+        level = new Level(width, height, 0, console, soundManager);
 
     }
 }
